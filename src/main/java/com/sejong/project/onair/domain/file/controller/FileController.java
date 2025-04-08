@@ -1,6 +1,7 @@
 package com.sejong.project.onair.domain.file.controller;
 
 
+import com.sejong.project.onair.domain.file.dto.FileResponse;
 import com.sejong.project.onair.domain.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,7 @@ public class FileController {
     private final FileService fileService;
 
     @PostMapping("/uploadFile")
-    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file){
-        return ResponseEntity.ok(fileService.uploadFile(file));
+    public FileResponse.HeaderDto uploadFile(@RequestParam("file") MultipartFile file){
+        return fileService.uploadFile(file);
     }
 }
