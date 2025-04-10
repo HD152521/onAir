@@ -4,10 +4,14 @@ import java.util.List;
 
 public class FileResponse {
     public record HeaderDto(
-            List<String> headers
+            List<String> headers,
+            String fileId
     ){
-        public static HeaderDto from(List<String> headers){
-            return new HeaderDto(headers);
+        public static HeaderDto from(List<String> headers,String fileId){
+            return new HeaderDto(
+                    headers,
+                    fileId
+            );
         }
     }
 }
