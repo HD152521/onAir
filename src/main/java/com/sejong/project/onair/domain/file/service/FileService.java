@@ -13,4 +13,5 @@ import java.util.List;
 public interface FileService {
     FileResponse.HeaderDto uploadFile(MultipartFile file);
     List<DataDto> readFileData(FileRequest.MappingResultDto mappingResultDto);
+    List<FileResponse.FileLogDto> getUploadLog();
 }

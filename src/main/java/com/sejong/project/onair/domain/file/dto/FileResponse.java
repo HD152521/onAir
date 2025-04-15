@@ -1,5 +1,7 @@
 package com.sejong.project.onair.domain.file.dto;
 
+import com.sejong.project.onair.domain.file.model.UploadFile;
+
 import java.util.List;
 
 public class FileResponse {
@@ -11,6 +13,18 @@ public class FileResponse {
             return new HeaderDto(
                     headers,
                     fileId
+            );
+        }
+    }
+
+    public record FileLogDto(
+            String filename,
+            String fileId
+    ){
+        public static FileLogDto from(UploadFile uploadFile){
+            return new FileLogDto(
+                uploadFile.getUploadFileName(),
+                uploadFile.getFileId()
             );
         }
     }

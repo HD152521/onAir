@@ -7,6 +7,7 @@ import com.sejong.project.onair.domain.file.model.FileData;
 import com.sejong.project.onair.domain.file.model.UploadFile;
 import com.sejong.project.onair.domain.file.repository.FileDataRepository;
 import com.sejong.project.onair.domain.file.repository.FileRepository;
+import com.sejong.project.onair.domain.member.Member;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
@@ -32,8 +33,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +58,26 @@ public class FileServiceImpl implements FileService{
         }
     }
 
+    public List<FileResponse.FileLogDto> getUploadLog(){
+        //fixme member값 가져오기
+        Member member = null;
+
+        List<UploadFile> uploadFiles = fileRepository.findUploadFilesByMember(member);
+        List<FileResponse.FileLogDto> logDtos = new ArrayList<>();
+
+        for(UploadFile file: uploadFiles){
+            logDtos.add(
+                    FileResponse.FileLogDto.from(file)
+            );
+        }
+
+        return logDtos;
+    }
+
     public FileResponse.HeaderDto uploadFile(MultipartFile file){
+
+        //fixme member값 가져와서 누가 올린 파일인지 알아야함.
+        Member member = null;
 
         if(TYPE_CSV.equals(file.getContentType())) log.warn("파일 종류가 csv가 아님");
         log.info("해당 파일의 종류는 {}",file.getContentType());
@@ -83,6 +102,7 @@ public class FileServiceImpl implements FileService{
                 .filePath(targetLocation.toString())
                 .realPath(targetLocation)
                 .fileId(uuid)
+                .member(member)
                 .build();
 
         fileRepository.save(uploadFile);
