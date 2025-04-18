@@ -5,6 +5,7 @@ import com.sejong.project.onair.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -38,5 +39,13 @@ public class Member extends BaseEntity {
 
         Role(String role){}
         private String role;
+    }
+
+    @Builder
+    public Member(String memberName,String email){
+        this.memberName = memberName;
+        this.email = email;
+        this.role = Role.USER;
+        this.isFirstLogin = true;
     }
 }
