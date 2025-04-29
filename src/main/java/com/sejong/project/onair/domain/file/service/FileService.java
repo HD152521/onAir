@@ -11,7 +11,13 @@ import java.util.List;
 
 @Service
 public interface FileService {
-    FileResponse.HeaderDto uploadFile(MultipartFile file);
-    List<DataDto> readFileData(FileRequest.MappingResultDto mappingResultDto);
-    List<FileResponse.FileLogDto> getUploadLog();
+
+    List<String> readHeader(MultipartFile file);
+
+
+
+    //fixme 없애야하는거 기존에 있던거임====================
+//    FileResponse.HeaderDto uploadFile(MultipartFile file);
+//    List<DataDto> readFileData(FileRequest.MappingResultDto mappingResultDto);
+//    List<FileResponse.FileLogDto> getUploadLog();
 }

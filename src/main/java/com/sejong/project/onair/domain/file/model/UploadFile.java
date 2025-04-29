@@ -28,6 +28,8 @@ public class UploadFile extends BaseEntity {
     @Transient
     private Path realPath;
 
+    private FileType fileType;
+
     @OneToMany(mappedBy = "uploadFile")
     private List<FileData> fileData;
 
@@ -35,13 +37,15 @@ public class UploadFile extends BaseEntity {
     private Member member;
 
     @Builder
-    public UploadFile(String uploadFileName, String storeFileName, String filePath,Path realPath,String fileId,Member member) {
+    public UploadFile(String uploadFileName, String storeFileName, String filePath,Path realPath,String fileId,Member member, FileType fileType
+    ) {
         this.uploadFileName = uploadFileName;
         this.storeFileName = storeFileName;
         this.filePath = filePath;
         this.realPath = realPath;
         this.fileId = fileId;
         this.member = member;
+        this.fileType = fileType;
     }
 
 }
