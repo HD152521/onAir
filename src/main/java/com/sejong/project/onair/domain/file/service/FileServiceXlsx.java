@@ -59,27 +59,9 @@ public class FileServiceXlsx implements FileService{
         return readHeader(row);
     }
 
-
-    public List<DataDto> readFileData(FileRequest.MappingResultDto mappingResultDto){
-
-        log.info("fileId:{}",mappingResultDto.fileId());
-        UploadFile uploadFile = fileRepository.findUploadFileByFileId(mappingResultDto.fileId());
-        log.info("파일 가져옴");
-
-        List<DataDto> dataDtos = new ArrayList<>();
-        try{
-            dataDtos = readFileData(uploadFile, mappingResultDto.headers());
-        }catch (Exception e){
-            log.error(e.getMessage());
-        }
-
-        return dataDtos;
-    }
-
     public List<DataDto> readFileData(UploadFile uploadFile, List<Integer> headers){
 
         List<FileData> datas = new ArrayList<>();
-
 
         try {
             Path path = Paths.get(uploadFile.getFilePath());

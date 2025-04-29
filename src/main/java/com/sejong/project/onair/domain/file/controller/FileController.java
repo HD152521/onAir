@@ -24,14 +24,14 @@ public class FileController {
         return fileService.uploadFile(file);
     }
 
-//    @PostMapping("/mapping")
-//    public List<DataDto> mappingData(@RequestBody  FileRequest.MappingResultDto mappingResultDto){
-//        return fileService.readFileData(mappingResultDto);
-//    }
-//
-//    @GetMapping("/upload/log")
-//    public List<FileResponse.FileLogDto> getUploadLog(){
-//        return fileService.getUploadLog();
-//    }
+    @PostMapping("/mapping")
+    public List<DataDto> mappingData(@RequestBody FileRequest.MappingResultDto mappingResultDto){
+        return fileService.readData(mappingResultDto);
+    }
+
+    @GetMapping("/upload/log")
+    public List<FileResponse.FileLogDto> getUploadLog(){
+        return fileService.getUploadLog();
+    }
 
 }

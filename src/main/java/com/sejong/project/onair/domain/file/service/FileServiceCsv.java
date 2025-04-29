@@ -1,7 +1,11 @@
 package com.sejong.project.onair.domain.file.service;
 
 import com.sejong.project.onair.domain.file.annotation.FileTypeHandler;
+import com.sejong.project.onair.domain.file.dto.DataDto;
+import com.sejong.project.onair.domain.file.model.FileData;
 import com.sejong.project.onair.domain.file.model.FileType;
+import com.sejong.project.onair.domain.file.model.UploadFile;
+import com.sejong.project.onair.domain.file.repository.FileDataRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -13,11 +17,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +32,8 @@ import java.util.List;
 public class FileServiceCsv implements FileService{
 
     private static final Logger log = LoggerFactory.getLogger(FileServiceCsv.class);
+    private final FileDataRepository fileDataRepository;
+
 
     public List<String> readHeader(MultipartFile file){
 
@@ -64,5 +71,127 @@ public class FileServiceCsv implements FileService{
         detector.dataEnd();
         String encoding = detector.getDetectedCharset();
         return (encoding != null) ? encoding : "UTF-8"; // fallback
+    }
+
+    public List<DataDto> readFileData(UploadFile uploadFile, List<Integer> headers){
+        List<FileData> datas = new ArrayList<>();
+
+        try {
+            log.info("path가져오기 전");
+            Path path = Paths.get(uploadFile.getFilePath());
+            log.info("path가져옴 ");
+
+            // 인코딩 감지를 위한 스트림 설정
+            BufferedInputStream bis = new BufferedInputStream(Files.newInputStream(path));
+            log.info("test1");
+            bis.mark(4096); // reset용
+            log.info("test2");
+            String encoding = detectCharset(bis);
+            log.info("test3");
+            bis.reset();
+
+            log.info("try문 진입전");
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(bis, Charset.forName(encoding)))) {
+                String line;
+                int rowCnt = 0;
+                log.info("파일 읽기 바로 전");
+                while ((line = reader.readLine()) != null) {
+                    rowCnt++;
+                    if (rowCnt == 1) continue; // 헤더는 건너뜀
+
+                    String[] tokens = line.split(",");
+
+                    LocalDateTime time = null;
+                    try {
+                        time = LocalDateTime.parse(tokens[headers.get(0)-1].trim());
+                    } catch (Exception ignored) {}
+
+                    double co2 = parseDouble(tokens, headers.get(1));
+                    double ch4_ppb = parseDouble(tokens, headers.get(2));
+                    double ch4_ppm = parseDouble(tokens, headers.get(3));
+                    String type = parseString(tokens, headers.get(4));
+                    String province = parseString(tokens, headers.get(5));
+                    String city = parseString(tokens, headers.get(6));
+                    String district = parseString(tokens, headers.get(7));
+                    String code = parseString(tokens, headers.get(8));
+                    double so2_ppm = parseDouble(tokens, headers.get(9));
+                    double no2_ppm = parseDouble(tokens, headers.get(10));
+                    double o3_ppm = parseDouble(tokens, headers.get(11));
+                    double co_ppm = parseDouble(tokens, headers.get(12));
+                    double pm10 = parseDouble(tokens, headers.get(13));
+                    double pm2_5 = parseDouble(tokens, headers.get(14));
+                    double nox_ppm = parseDouble(tokens, headers.get(15));
+                    double no_ppm = parseDouble(tokens, headers.get(16));
+                    int windDirection = parseInt(tokens, headers.get(17));
+                    double windSpeed = parseDouble(tokens, headers.get(18));
+                    double temperature = parseDouble(tokens, headers.get(19));
+                    double humidity = parseDouble(tokens, headers.get(20));
+
+                    datas.add(FileData.builder()
+                            .time(time)
+                            .co2(co2)
+                            .ch4_ppb(ch4_ppb)
+                            .ch4_ppm(ch4_ppm)
+                            .type(type)
+                            .province(province)
+                            .city(city)
+                            .district(district)
+                            .code(code)
+                            .so2_ppm(so2_ppm)
+                            .no2_ppm(no2_ppm)
+                            .o3_ppm(o3_ppm)
+                            .co_ppm(co_ppm)
+                            .pm10(pm10)
+                            .pm2_5(pm2_5)
+                            .nox_ppm(nox_ppm)
+                            .no_ppm(no_ppm)
+                            .windDirection(windDirection)
+                            .windSpeed(windSpeed)
+                            .temperature(temperature)
+                            .humidity(humidity)
+                            .fileId(uploadFile.getFileId())
+                            .uploadFile(uploadFile)
+                            .build());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("CSV read error: {}", e.getMessage());
+        }
+
+        List<DataDto> dataDtos = new ArrayList<>();
+        for (FileData data : datas) {
+            if (data == null) continue;
+            fileDataRepository.save(data);
+            dataDtos.add(DataDto.from(data));
+        }
+        return dataDtos;
+
+    }
+
+    private String parseString(String[] tokens, int index) {
+        index--;
+        if (index >= tokens.length) return null;
+        return tokens[index].trim();
+    }
+
+    private double parseDouble(String[] tokens, int index) {
+        index--;
+        if (index >= tokens.length) return 0.0;
+        try {
+            return Double.parseDouble(tokens[index].trim());
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    private int parseInt(String[] tokens, int index) {
+        index--;
+        if (index >= tokens.length) return 0;
+        try {
+            return (int)Double.parseDouble(tokens[index].trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+
     }
 }

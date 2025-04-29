@@ -23,6 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -44,7 +46,7 @@ public class FileServiceImpl{
         fileDir = Paths.get(dir).toAbsolutePath().normalize();
         try {
             Files.createDirectories(fileDir);
-            for(FileType fileType : processor.getHandlerMap().keySet()){
+            for(FileType fileType : FileType.values()){
                 log.info("postConstruct filtType:{}",fileType.getExtension());
                 String tmpDir = dir+"/"+fileType.getExtension();
                 Files.createDirectories(Paths.get(tmpDir).toAbsolutePath().normalize());
@@ -73,45 +75,84 @@ public class FileServiceImpl{
 
         //Note 각 확장자명에 맞는 파일에 저장됨.
         String tmpDir = dir+"/"+fileType.getExtension();
+        log.info("tmpDir:{}",tmpDir);
         fileDir = Paths.get(tmpDir).toAbsolutePath().normalize();
 
         log.info("fildDir: {}",fileDir.toString());
         Path targetLocation = fileDir.resolve(realName);
 
-//        try {
-//            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-//        } catch (IOException e) {
-//            log.warn(e.getMessage());
-//        }
-//
-//        UploadFile uploadFile = UploadFile.builder()
-//                .uploadFileName(uploadFileName)
-//                .storeFileName(realName)
-//                .filePath(targetLocation.toString())
-//                .realPath(targetLocation)
-//                .fileId(uuid)
-//                .member(member)
-//                .fileType(fileType)
-//                .build();
-//
-//        fileRepository.save(uploadFile);
+        try {
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.warn(e.getMessage());
+            log.warn("저장 안됨.");
+        }
+
+        UploadFile uploadFile = UploadFile.builder()
+                .uploadFileName(uploadFileName)
+                .storeFileName(realName)
+                .filePath(targetLocation.toString())
+                .realPath(targetLocation)
+                .fileId(uuid)
+                .member(member)
+                .fileType(fileType)
+                .build();
+
+        fileRepository.save(uploadFile);
         return FileResponse.HeaderDto.from(fileService.readHeader(file),uuid);
     }
 
-//    public List<FileResponse.FileLogDto> getUploadLog(){
-//        //fixme member값 가져오기
-//        Member member = null;
+    public List<FileResponse.FileLogDto> getUploadLog(){
+        //fixme member값 가져오기
+        Member member = null;
+
+        List<UploadFile> uploadFiles = fileRepository.findUploadFilesByMember(member);
+        List<FileResponse.FileLogDto> logDtos = new ArrayList<>();
+
+        for(UploadFile file: uploadFiles){
+            logDtos.add(
+                    FileResponse.FileLogDto.from(file)
+            );
+        }
+
+        return logDtos;
+    }
+
+    public List<DataDto> readData(FileRequest.MappingResultDto mappingResultDto){
+
+        UploadFile uploadFile = fileRepository.findUploadFileByFileId(mappingResultDto.fileId());
+        if(uploadFile==null){
+            log.warn("upload파일 발견 안됨");
+        }
+        log.info("fileId:{}",mappingResultDto.fileId());
+        log.info("파일 가져옴");
+
+        FileService fileService = processor.getHandlerMap().get(uploadFile.getFileType());
+
+        List<DataDto> dataDtos = new ArrayList<>();
+        try{
+            dataDtos = fileService.readFileData(uploadFile, mappingResultDto.headers());
+        }catch (Exception e){
+            log.error(e.getMessage());
+        }
+
+        return dataDtos;
+    }
+
+//    public List<DataDto> readFileData(FileRequest.MappingResultDto mappingResultDto){
 //
-//        List<UploadFile> uploadFiles = fileRepository.findUploadFilesByMember(member);
-//        List<FileResponse.FileLogDto> logDtos = new ArrayList<>();
+//        log.info("fileId:{}",mappingResultDto.fileId());
+//        UploadFile uploadFile = fileRepository.findUploadFileByFileId(mappingResultDto.fileId());
+//        log.info("파일 가져옴");
 //
-//        for(UploadFile file: uploadFiles){
-//            logDtos.add(
-//                    FileResponse.FileLogDto.from(file)
-//            );
+//        List<DataDto> dataDtos = new ArrayList<>();
+//        try{
+//            dataDtos = readFileData(uploadFile, mappingResultDto.headers());
+//        }catch (Exception e){
+//            log.error(e.getMessage());
 //        }
 //
-//        return logDtos;
+//        return dataDtos;
 //    }
 
 
