@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 
@@ -43,6 +44,11 @@ public class FileServiceImpl{
         fileDir = Paths.get(dir).toAbsolutePath().normalize();
         try {
             Files.createDirectories(fileDir);
+            for(FileType fileType : processor.getHandlerMap().keySet()){
+                log.info("postConstruct filtType:{}",fileType.getExtension());
+                String tmpDir = dir+"/"+fileType.getExtension();
+                Files.createDirectories(Paths.get(tmpDir).toAbsolutePath().normalize());
+            }
         }catch (IOException e) {
             log.error(e.getMessage());
         }
@@ -52,29 +58,27 @@ public class FileServiceImpl{
         //fixme member값 가져와서 누가 올린 파일인지 알아야함.
         Member member = null;
 
-        log.info("파일 종류는 {}",file.getContentType());
+        log.info("uploadFile진입");
 
         FileType fileType = FileType.fromMimeType(file.getContentType());
         String uploadFileName = StringUtils.cleanPath(file.getOriginalFilename());
-
-        log.info("해당 파일의 종류는 {}",fileType.getMimeType());
-        log.info("uploadFileName:{}", uploadFileName);
-
         String uuid = UUID.randomUUID().toString();
         String realName =  uuid+ "_" + uploadFileName;
-        log.info("fildDir: {}",fileDir.toString());
-
-        Path targetLocation = fileDir.resolve(realName);
 
         FileService fileService = processor.getHandlerMap().get(fileType);
+        if (fileService == null) {
+            //NOTE 예외 처리 해줘야함
+            throw new IllegalArgumentException("지원하지 않는 파일 형식: " + fileType);
+        }
 
-//        if (fileService == null) {
-//            //NOTE 예외 처리 해줘야함
-//            throw new IllegalArgumentException("지원하지 않는 파일 형식: " + fileType);
-//        }
-//
+        //Note 각 확장자명에 맞는 파일에 저장됨.
+        String tmpDir = dir+"/"+fileType.getExtension();
+        fileDir = Paths.get(tmpDir).toAbsolutePath().normalize();
+
+        log.info("fildDir: {}",fileDir.toString());
+        Path targetLocation = fileDir.resolve(realName);
+
 //        try {
-//            //프로젝트에 저장한거
 //            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 //        } catch (IOException e) {
 //            log.warn(e.getMessage());

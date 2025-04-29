@@ -34,9 +34,31 @@ public class FileServiceXls implements FileService {
 
     private static final Logger log = LoggerFactory.getLogger(FileServiceXls.class);
 
+    public List<String> readHeader(Row row){
+        if(row==null) log.warn("row is null");
+
+        log.info("readHeader cell개수:{}",row.getPhysicalNumberOfCells());
+        List<String> headers = new ArrayList<>();
+        for(Cell cell: row){
+            System.out.print(cell.getStringCellValue()+" ");
+            headers.add(cell.getStringCellValue());
+        }
+        System.out.println();
+        return headers;
+    }
+
     public List<String> readHeader(MultipartFile file){
-        List<String> lists = new ArrayList<>();
-        return null;
+        Row row = null;
+        try{
+            Workbook workbook = WorkbookFactory.create(file.getInputStream());
+            int sheetSize = workbook.getNumberOfSheets();
+            Sheet sheet = workbook.getSheetAt(0);
+
+            row = sheet.getRow(0);
+        }catch (Exception e){
+            log.error(e.getMessage());
+        }
+        return readHeader(row);
     }
 
 
