@@ -1,10 +1,12 @@
 package com.sejong.project.onair.domain.file.model;
 
+import com.sejong.project.onair.domain.member.Member;
 import com.sejong.project.onair.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+
 import java.nio.file.Path;
 import java.util.List;
 
@@ -26,16 +28,24 @@ public class UploadFile extends BaseEntity {
     @Transient
     private Path realPath;
 
+    private FileType fileType;
+
     @OneToMany(mappedBy = "uploadFile")
     private List<FileData> fileData;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Member member;
+
     @Builder
-    public UploadFile(String uploadFileName, String storeFileName, String filePath,Path realPath,String fileId) {
+    public UploadFile(String uploadFileName, String storeFileName, String filePath,Path realPath,String fileId,Member member, FileType fileType
+    ) {
         this.uploadFileName = uploadFileName;
         this.storeFileName = storeFileName;
         this.filePath = filePath;
         this.realPath = realPath;
         this.fileId = fileId;
+        this.member = member;
+        this.fileType = fileType;
     }
 
 }

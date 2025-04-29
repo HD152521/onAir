@@ -15,3 +15,20 @@ spring:
   mysql:
     charset: utf8mb4
     collation: utf8mb4_unicode_ci
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1070974475846-giv5891sdrqs0c825ecrfb6vumacdnd9.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+              - profile
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+
+
+
+jwt:
+  secret: ZGZsbTJwM2ttZndlb2lmbjEzOTRnbnVxZWYxMjM1Zmdhc2RmZzQ0NHdkZjM0YXNkZjhhc2RmOTM0ZA==

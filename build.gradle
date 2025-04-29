@@ -24,23 +24,30 @@ dependencies {
 //    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.security:spring-security-messaging'
-
-    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
-
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-    //csv 읽기
-//    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
 
     //엑셀 파일 읽는 의존성 주입
     implementation 'org.apache.poi:poi:5.2.5' //Excel 97-2003(.xls) 형식을 처리하기 위한 기본 POI 라이브러리
     implementation 'org.apache.poi:poi-ooxml:5.2.5'  //Excel 2007+ (.xlsx) 형식을 처리하기 위한 확장 라이브러리
     implementation 'com.opencsv:opencsv:5.9' //CSV 파일 읽기/쓰기를 위한 라이브러리
 
+    //인코딩 감지 라이브러리
+    implementation 'com.github.albfernandez:juniversalchardet:2.4.0'
+
     //swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+    //jwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    //oauth
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
 }
 
