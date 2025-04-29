@@ -1,4 +1,4 @@
-package com.sejong.project.onair.domain.member;
+package com.sejong.project.onair.domain.member.model;
 
 import com.sejong.project.onair.domain.file.model.UploadFile;
 import com.sejong.project.onair.global.entity.BaseEntity;

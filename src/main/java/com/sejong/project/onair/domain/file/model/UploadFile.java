@@ -1,6 +1,6 @@
 package com.sejong.project.onair.domain.file.model;
 
-import com.sejong.project.onair.domain.member.Member;
+import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,6 +1,6 @@
 package com.sejong.project.onair.domain.member.dto;
 
-import com.sejong.project.onair.domain.member.Member;
+import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.global.token.vo.AccessToken;
 
 public class MemberResponse {

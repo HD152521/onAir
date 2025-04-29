@@ -1,7 +1,7 @@
 package com.sejong.project.onair.global.token;
 
 
-import com.sejong.project.onair.domain.member.Member;
+import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.global.exception.BaseException;
 import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import com.sejong.project.onair.global.token.vo.AccessToken;

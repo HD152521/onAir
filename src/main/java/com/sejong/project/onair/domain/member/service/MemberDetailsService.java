@@ -2,7 +2,7 @@ package com.sejong.project.onair.domain.member.service;
 
 import com.sejong.project.onair.domain.member.dto.MemberAuthContext;
 import com.sejong.project.onair.domain.member.dto.MemberDetails;
-import com.sejong.project.onair.domain.member.Member;
+import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.domain.member.repository.MemberRepository;
 import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import lombok.RequiredArgsConstructor;

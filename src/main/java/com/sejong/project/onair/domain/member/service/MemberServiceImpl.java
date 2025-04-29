@@ -1,6 +1,6 @@
 package com.sejong.project.onair.domain.member.service;
 
-import com.sejong.project.onair.domain.member.Member;
+import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.domain.member.dto.MemberRequest;
 import com.sejong.project.onair.domain.member.dto.MemberResponse;
 import com.sejong.project.onair.domain.member.repository.MemberRepository;

@@ -16,9 +16,4 @@ public interface FileService {
     List<String> readHeader(MultipartFile file);
     List<DataDto> readFileData(UploadFile uploadFile, List<Integer> headers);
 
-
-    //fixme 없애야하는거 기존에 있던거임====================
-//    FileResponse.HeaderDto uploadFile(MultipartFile file);
-//    List<DataDto> readFileData(FileRequest.MappingResultDto mappingResultDto);
-//    List<FileResponse.FileLogDto> getUploadLog();
 }
