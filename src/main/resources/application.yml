@@ -5,6 +5,8 @@ spring:
     url: jdbc:mysql://root:VlFQzFRKFMlgquumqaDPDPLwbAroNlqt@mysql.railway.internal:3306/railway?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
     username: root
     password: VlFQzFRKFMlgquumqaDPDPLwbAroNlqt
+#    username: onAir
+#    password: onAir123!@#
   jpa:
     hibernate:
       ddl-auto: update
@@ -29,7 +31,15 @@ spring:
               - profile
             redirect-uri: http://localhost:8080/login/oauth2/code/google
 
+springdoc:
+  swagger-ui:
+    path: /api-test  # swagger-ui ?? ??? ?? ??, ?? ??? ???? http://localhost:8080/swagger-ui/index.html? ????? ?.
 
+    groups-order: DESC # path, query, body, response ??? ??
+
+    tags-sorter: alpha # ??? ??? ??? ??
+
+    operations-sorter: method  # delete - get - patch - post - put ??? ??, alpha? ???? ??? ??? ?? ??
 
 jwt:
   secret: ZGZsbTJwM2ttZndlb2lmbjEzOTRnbnVxZWYxMjM1Zmdhc2RmZzQ0NHdkZjM0YXNkZjhhc2RmOTM0ZA==
