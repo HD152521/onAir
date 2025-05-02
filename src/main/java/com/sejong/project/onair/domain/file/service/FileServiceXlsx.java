@@ -20,10 +20,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service("xlss")
+@Service("xlsx")
 @FileTypeHandler(FileType.XLSX)
 @RequiredArgsConstructor
 public class FileServiceXlsx implements FileService{
@@ -66,6 +70,7 @@ public class FileServiceXlsx implements FileService{
         try {
             Path path = Paths.get(uploadFile.getFilePath());
             Workbook workbook = WorkbookFactory.create(Files.newInputStream(path));
+            FormulaEvaluator formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
             int sheetSize = workbook.getNumberOfSheets();
             Sheet sheet = workbook.getSheetAt(0);
 
@@ -75,33 +80,61 @@ public class FileServiceXlsx implements FileService{
                 Row row = sheet.getRow(rowCnt++);
                 if(row==null) break;
 
+                printData(row);
                 LocalDateTime time = null;
-                Cell timeCell = row.getCell(headers.get(0));
-                if (timeCell != null && DateUtil.isCellDateFormatted(timeCell)) {
-                    time = timeCell.getDateCellValue().toInstant()
-                            .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                Cell timeCell = row.getCell(headers.get(0)-1);
+                if (timeCell != null) {
+                    if (DateUtil.isCellDateFormatted(timeCell)) {
+                        time = timeCell.getDateCellValue().toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime();
+                    } else {
+                        // 날짜 형식이 아닌 경우, 텍스트로 변환 후 날짜 파싱
+                        String timeString = timeCell.getStringCellValue();
+                        log.info("timeStinrg : {}",timeString);
+
+                        if (timeString != null && !timeString.trim().isEmpty()) {
+                            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                                    .appendValue(ChronoField.YEAR, 4)
+                                    .appendLiteral('-')
+                                    .appendValue(ChronoField.MONTH_OF_YEAR)  // 1자리도 허용
+                                    .appendLiteral('-')
+                                    .appendValue(ChronoField.DAY_OF_MONTH)
+                                    .appendLiteral(' ')
+                                    .appendValue(ChronoField.HOUR_OF_DAY)
+                                    .appendLiteral(':')
+                                    .appendValue(ChronoField.MINUTE_OF_HOUR)
+                                    .toFormatter();
+                            try {
+                                time = LocalDateTime.parse(timeString.trim(), formatter);
+                            } catch (DateTimeParseException e) {
+                                log.warn("시간 파싱 실패: '{}'", timeString);
+                            }
+                        }
+                    }
                 }
 
-                double co2 = getDoubleCellValue(row, headers.get(1));
-                double ch4_ppb = getDoubleCellValue(row, headers.get(2));
-                double ch4_ppm = getDoubleCellValue(row, headers.get(3));
-                String type = getStringCellValue(row, headers.get(4));
-                String province = getStringCellValue(row, headers.get(5));
-                String city = getStringCellValue(row, headers.get(6));
-                String district = getStringCellValue(row, headers.get(7));
-                String code = getStringCellValue(row, headers.get(8));
-                double so2_ppm = getDoubleCellValue(row, headers.get(9));
-                double no2_ppm = getDoubleCellValue(row, headers.get(10));
-                double o3_ppm = getDoubleCellValue(row, headers.get(11));
-                double co_ppm = getDoubleCellValue(row, headers.get(12));
-                double pm10 = getDoubleCellValue(row, headers.get(13));
-                double pm2_5 = getDoubleCellValue(row, headers.get(14));
-                double nox_ppm = getDoubleCellValue(row, headers.get(15));
-                double no_ppm = getDoubleCellValue(row, headers.get(16));
-                int windDirection = getIntCellValue(row, headers.get(17));
-                double windSpeed = getDoubleCellValue(row, headers.get(18));
-                double temperature = getDoubleCellValue(row, headers.get(19));
-                double humidity = getDoubleCellValue(row, headers.get(20));
+                double co2 = getDoubleCellValue(row, headers.get(1), formulaEvaluator);
+                double ch4_ppb = getDoubleCellValue(row, headers.get(2), formulaEvaluator);
+                double ch4_ppm = getDoubleCellValue(row, headers.get(3), formulaEvaluator);
+                String type = getStringCellValue(row, headers.get(4), formulaEvaluator);
+                String province = getStringCellValue(row, headers.get(5), formulaEvaluator);
+                String city = getStringCellValue(row, headers.get(6), formulaEvaluator);
+                String district = getStringCellValue(row, headers.get(7), formulaEvaluator);
+                String observatoryName = getStringCellValue(row, headers.get(8), formulaEvaluator);
+                String code = getStringCellValue(row, headers.get(9), formulaEvaluator);
+                double so2_ppm = getDoubleCellValue(row, headers.get(10), formulaEvaluator);
+                double no2_ppm = getDoubleCellValue(row, headers.get(11), formulaEvaluator);
+                double o3_ppm = getDoubleCellValue(row, headers.get(12), formulaEvaluator);
+                double co_ppm = getDoubleCellValue(row, headers.get(13), formulaEvaluator);
+                double pm10 = getDoubleCellValue(row, headers.get(14), formulaEvaluator);
+                double pm2_5 = getDoubleCellValue(row, headers.get(15), formulaEvaluator);
+                double nox_ppm = getDoubleCellValue(row, headers.get(16), formulaEvaluator);
+                double no_ppm = getDoubleCellValue(row, headers.get(17), formulaEvaluator);
+                int windDirection = getIntCellValue(row, headers.get(18), formulaEvaluator);
+                double windSpeed = getDoubleCellValue(row, headers.get(19), formulaEvaluator);
+                double temperature = getDoubleCellValue(row, headers.get(20), formulaEvaluator);
+                double humidity = getDoubleCellValue(row, headers.get(21), formulaEvaluator);
 
                 datas.add(FileData.builder()
                         .time(time)
@@ -112,6 +145,7 @@ public class FileServiceXlsx implements FileService{
                         .province(province)
                         .city(city)
                         .district(district)
+                        .observatoryName(observatoryName)
                         .code(code)
                         .so2_ppm(so2_ppm)
                         .no2_ppm(no2_ppm)
@@ -148,27 +182,50 @@ public class FileServiceXlsx implements FileService{
         return dataDtos;
     }
 
-    private String getStringCellValue(Row row, int idx) {
-        Cell cell = row.getCell(idx);
-        return (cell == null) ? null : cell.toString().trim();
-    }
+    private double getDoubleCellValue(Row row, int idx, FormulaEvaluator formulaEvaluator) {
+        Cell cell = row.getCell(--idx);
+        if (cell == null) {
+            log.info("[File] 해당 데이터가 null임");
+            return 0.0;
+        }
 
-    private double getDoubleCellValue(Row row, int idx) {
-        Cell cell = row.getCell(idx);
-        if (cell == null) return 0.0;
-
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return cell.getNumericCellValue();
+        // 수식이 있을 경우 수식 평가
+        CellValue cellValue = formulaEvaluator.evaluate(cell);
+        System.out.println(cell.toString()+" "+cellValue.toString());
+        if (cellValue.getCellType() == CellType.NUMERIC) {
+            return cellValue.getNumberValue();
         } else {
             try {
                 return Double.parseDouble(cell.toString());
             } catch (NumberFormatException e) {
+                log.info("[File] Xls 형변환 실패");
                 return 0.0;
             }
         }
     }
 
-    private int getIntCellValue(Row row, int idx) {
-        return (int) getDoubleCellValue(row, idx);
+    private String getStringCellValue(Row row, int idx, FormulaEvaluator formulaEvaluator) {
+        Cell cell = row.getCell(--idx);
+        if (cell == null) {
+            log.info("[File] 해당 데이터가 null임");
+            return null;
+        }
+
+        // 수식이 있을 경우 수식 평가
+        CellValue cellValue = formulaEvaluator.evaluate(cell);
+        if (cellValue.getCellType() == CellType.STRING) {
+            return cellValue.getStringValue().trim();
+        }
+        return cell.toString().trim();
+    }
+
+    private int getIntCellValue(Row row, int idx, FormulaEvaluator formulaEvaluator) {
+        return (int) getDoubleCellValue(row, idx,formulaEvaluator);
+    }
+
+    private void printData(Row row){
+        for(int i=0;i<22;i++){
+            System.out.print(row.getCell(i)+" | ");
+        }System.out.println();
     }
 }

@@ -24,6 +24,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,10 +105,24 @@ public class FileServiceCsv implements FileService{
                     printData(tokens);
 
                     LocalDateTime time = null;
+                    DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                            .appendValue(ChronoField.YEAR, 4)
+                            .appendLiteral('-')
+                            .appendValue(ChronoField.MONTH_OF_YEAR)  // 1자리도 허용
+                            .appendLiteral('-')
+                            .appendValue(ChronoField.DAY_OF_MONTH)
+                            .appendLiteral(' ')
+                            .appendValue(ChronoField.HOUR_OF_DAY)
+                            .appendLiteral(':')
+                            .appendValue(ChronoField.MINUTE_OF_HOUR)
+                            .toFormatter();
+                    String timeString = tokens[headers.get(0) - 1].trim();
+
                     try {
-                        //Fixme time 값 자꾸 null로 가져옴.
-                        time = LocalDateTime.parse(tokens[headers.get(0)-1].trim());
-                    } catch (Exception ignored) {}
+                        time = LocalDateTime.parse(timeString, formatter);
+                    } catch (DateTimeParseException e) {
+                        log.warn("시간 파싱 실패: '{}'", timeString);
+                    }
 
                     double co2 = parseDouble(tokens, headers.get(1));
                     double ch4_ppb = parseDouble(tokens, headers.get(2));
@@ -113,19 +131,20 @@ public class FileServiceCsv implements FileService{
                     String province = parseString(tokens, headers.get(5));
                     String city = parseString(tokens, headers.get(6));
                     String district = parseString(tokens, headers.get(7));
-                    String code = parseString(tokens, headers.get(8));
-                    double so2_ppm = parseDouble(tokens, headers.get(9));
-                    double no2_ppm = parseDouble(tokens, headers.get(10));
-                    double o3_ppm = parseDouble(tokens, headers.get(11));
-                    double co_ppm = parseDouble(tokens, headers.get(12));
-                    double pm10 = parseDouble(tokens, headers.get(13));
-                    double pm2_5 = parseDouble(tokens, headers.get(14));
-                    double nox_ppm = parseDouble(tokens, headers.get(15));
-                    double no_ppm = parseDouble(tokens, headers.get(16));
-                    int windDirection = parseInt(tokens, headers.get(17));
-                    double windSpeed = parseDouble(tokens, headers.get(18));
-                    double temperature = parseDouble(tokens, headers.get(19));
-                    double humidity = parseDouble(tokens, headers.get(20));
+                    String observatoryName = parseString(tokens, headers.get(8));
+                    String code = parseString(tokens, headers.get(9));
+                    double so2_ppm = parseDouble(tokens, headers.get(10));
+                    double no2_ppm = parseDouble(tokens, headers.get(11));
+                    double o3_ppm = parseDouble(tokens, headers.get(12));
+                    double co_ppm = parseDouble(tokens, headers.get(13));
+                    double pm10 = parseDouble(tokens, headers.get(14));
+                    double pm2_5 = parseDouble(tokens, headers.get(15));
+                    double nox_ppm = parseDouble(tokens, headers.get(16));
+                    double no_ppm = parseDouble(tokens, headers.get(17));
+                    int windDirection = parseInt(tokens, headers.get(18));
+                    double windSpeed = parseDouble(tokens, headers.get(19));
+                    double temperature = parseDouble(tokens, headers.get(20));
+                    double humidity = parseDouble(tokens, headers.get(21));
 
                     datas.add(FileData.builder()
                             .time(time)
@@ -136,6 +155,7 @@ public class FileServiceCsv implements FileService{
                             .province(province)
                             .city(city)
                             .district(district)
+                            .observatoryName(observatoryName)
                             .code(code)
                             .so2_ppm(so2_ppm)
                             .no2_ppm(no2_ppm)
@@ -172,15 +192,16 @@ public class FileServiceCsv implements FileService{
     private String parseString(String[] tokens, int index) {
         index--;
         if(checkData(tokens,index)) return null;
-        return tokens[index].trim();
+        return tokens[index];
     }
 
     private double parseDouble(String[] tokens, int index) {
+        index--;
         if(checkData(tokens,index)) return 0.0;
         try {
-            return Double.parseDouble(tokens[index].trim());
+            return Double.parseDouble(tokens[index]);
         } catch (NumberFormatException e) {
-            log.info("[File] CSV 파일 값을 읽는 도중 double값이 아닌 값을 발견");
+            log.info("[File] CSV 파일 값을 읽는 도중 double값이 아닌 값을 발견 {}번째",index);
             return 0.0;
         }
     }
@@ -189,7 +210,7 @@ public class FileServiceCsv implements FileService{
         index--;
         if(checkData(tokens,index)) return 0;
         try {
-            return (int)Double.parseDouble(tokens[index].trim());
+            return (int)Double.parseDouble(tokens[index]);
         } catch (NumberFormatException e) {
             log.info("[File] CSV 파일 값을 읽는 도중 int 값이 아닌 값을 발견");
             return 0;
@@ -198,9 +219,12 @@ public class FileServiceCsv implements FileService{
     }
 
     private boolean checkData(String[] tokens,int index){
-        if (index >= tokens.length) return false;
-        if (tokens[index].isBlank()) return false;
-        return true;
+        if (index >= tokens.length) return true;
+        if (tokens[index].isBlank()){
+            log.warn("index is blank");
+            return true;
+        }
+        return false;
     }
 
     private void printData(String[] tokens){

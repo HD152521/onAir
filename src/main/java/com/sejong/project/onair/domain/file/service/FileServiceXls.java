@@ -23,6 +23,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +34,8 @@ import java.util.List;
 @FileTypeHandler(FileType.XLS)
 @RequiredArgsConstructor
 public class FileServiceXls implements FileService {
+
+    //fixme xls 파일은 조금 더 손 봐야함.
 
     private final FileDataRepository fileDataRepository;
     private final FileRepository fileRepository;
@@ -78,11 +84,38 @@ public class FileServiceXls implements FileService {
                     Row row = sheet.getRow(rowCnt++);
                     if (row == null) break;
 
+                    printData(row);
+
                     LocalDateTime time = null;
                     Cell timeCell = row.getCell(headers.get(0));
-                    if (timeCell != null && DateUtil.isCellDateFormatted(timeCell)) {
-                        time = timeCell.getDateCellValue().toInstant()
-                                .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    if (timeCell != null) {
+                        // 날짜 형식 셀인지 확인
+                        if (DateUtil.isCellDateFormatted(timeCell)) {
+                            time = timeCell.getDateCellValue().toInstant()
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDateTime();
+                        } else {
+                            // 날짜 형식이 아닌 경우, 텍스트로 변환 후 날짜 파싱
+                            String timeString = timeCell.getStringCellValue();
+                            if (timeString != null && !timeString.trim().isEmpty()) {
+                                DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                                        .appendValue(ChronoField.YEAR, 4)
+                                        .appendLiteral('-')
+                                        .appendValue(ChronoField.MONTH_OF_YEAR)  // 1자리도 허용
+                                        .appendLiteral('-')
+                                        .appendValue(ChronoField.DAY_OF_MONTH)
+                                        .appendLiteral(' ')
+                                        .appendValue(ChronoField.HOUR_OF_DAY)
+                                        .appendLiteral(':')
+                                        .appendValue(ChronoField.MINUTE_OF_HOUR)
+                                        .toFormatter();
+                                try {
+                                    time = LocalDateTime.parse(timeString.trim(), formatter);
+                                } catch (DateTimeParseException e) {
+                                    log.warn("시간 파싱 실패: '{}'", timeString);
+                                }
+                            }
+                        }
                     }
 
                     double co2 = getDoubleCellValue(row, headers.get(1));
@@ -92,19 +125,20 @@ public class FileServiceXls implements FileService {
                     String province = getStringCellValue(row, headers.get(5));
                     String city = getStringCellValue(row, headers.get(6));
                     String district = getStringCellValue(row, headers.get(7));
-                    String code = getStringCellValue(row, headers.get(8));
-                    double so2_ppm = getDoubleCellValue(row, headers.get(9));
-                    double no2_ppm = getDoubleCellValue(row, headers.get(10));
-                    double o3_ppm = getDoubleCellValue(row, headers.get(11));
-                    double co_ppm = getDoubleCellValue(row, headers.get(12));
-                    double pm10 = getDoubleCellValue(row, headers.get(13));
-                    double pm2_5 = getDoubleCellValue(row, headers.get(14));
-                    double nox_ppm = getDoubleCellValue(row, headers.get(15));
-                    double no_ppm = getDoubleCellValue(row, headers.get(16));
-                    int windDirection = getIntCellValue(row, headers.get(17));
-                    double windSpeed = getDoubleCellValue(row, headers.get(18));
-                    double temperature = getDoubleCellValue(row, headers.get(19));
-                    double humidity = getDoubleCellValue(row, headers.get(20));
+                    String observatoryName =  getStringCellValue(row, headers.get(8));
+                    String code = getStringCellValue(row, headers.get(9));
+                    double so2_ppm = getDoubleCellValue(row, headers.get(10));
+                    double no2_ppm = getDoubleCellValue(row, headers.get(11));
+                    double o3_ppm = getDoubleCellValue(row, headers.get(12));
+                    double co_ppm = getDoubleCellValue(row, headers.get(13));
+                    double pm10 = getDoubleCellValue(row, headers.get(14));
+                    double pm2_5 = getDoubleCellValue(row, headers.get(15));
+                    double nox_ppm = getDoubleCellValue(row, headers.get(16));
+                    double no_ppm = getDoubleCellValue(row, headers.get(17));
+                    int windDirection = getIntCellValue(row, headers.get(18));
+                    double windSpeed = getDoubleCellValue(row, headers.get(19));
+                    double temperature = getDoubleCellValue(row, headers.get(20));
+                    double humidity = getDoubleCellValue(row, headers.get(21));
 
                     datas.add(FileData.builder()
                             .time(time)
@@ -115,6 +149,7 @@ public class FileServiceXls implements FileService {
                             .province(province)
                             .city(city)
                             .district(district)
+                            .observatoryName(observatoryName)
                             .code(code)
                             .so2_ppm(so2_ppm)
                             .no2_ppm(no2_ppm)
@@ -182,5 +217,10 @@ public class FileServiceXls implements FileService {
         return (int) getDoubleCellValue(row, idx);
     }
 
+    private void printData(Row row){
+        for(int i=0;i<22;i++){
+            System.out.print(row.getCell(i)+" | ");
+        }System.out.println();
+    }
 
 }

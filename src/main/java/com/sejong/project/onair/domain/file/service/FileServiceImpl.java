@@ -126,7 +126,7 @@ public class FileServiceImpl{
 
         FileService fileService = getFileServiceByFileType(uploadFile.getFileType());
         List<DataDto> dataDtos = new ArrayList<>();
-
+        log.info("{} service 파일 호출",fileService);
         try{
             dataDtos = fileService.readFileData(uploadFile, mappingResultDto.headers());
         }catch (Exception e){
