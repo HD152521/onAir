@@ -6,8 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FileRepository extends JpaRepository<UploadFile,Long> {
-    UploadFile findUploadFileByFileId (String fileId);
+    Optional<UploadFile> findUploadFileByFileId (String fileId);
     List<UploadFile> findUploadFilesByMember(Member member);
 }

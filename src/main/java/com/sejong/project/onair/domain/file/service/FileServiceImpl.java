@@ -8,11 +8,14 @@ import com.sejong.project.onair.domain.file.model.UploadFile;
 import com.sejong.project.onair.domain.file.repository.FileRepository;
 import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.global.beanProcessor.FileTypeHandlerProcessor;
+import com.sejong.project.onair.global.exception.BaseException;
+import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -54,22 +57,22 @@ public class FileServiceImpl{
         }
     }
 
+    @Transactional
     public FileResponse.HeaderDto uploadFile(MultipartFile file){
-        //fixme member값 가져와서 누가 올린 파일인지 알아야함.
-        Member member = null;
+        log.info("[File] upload controller진입");
 
-        log.info("uploadFile진입");
+
+        Member member = null;
+        //fixme 임시로 null값 처리함.
+//        Member member = memberRepository.findMemberByEmail(principal.getAttributes().get("email").toString())
+//                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
 
         FileType fileType = FileType.fromMimeType(file.getContentType());
         String uploadFileName = StringUtils.cleanPath(file.getOriginalFilename());
         String uuid = UUID.randomUUID().toString();
         String realName =  uuid+ "_" + uploadFileName;
 
-        FileService fileService = processor.getHandlerMap().get(fileType);
-        if (fileService == null) {
-            //NOTE 예외 처리 해줘야함
-            throw new IllegalArgumentException("지원하지 않는 파일 형식: " + fileType);
-        }
+        FileService fileService = getFileServiceByFileType(fileType);
 
         //Note 각 확장자명에 맞는 파일에 저장됨.
         String tmpDir = dir+"/"+fileType.getExtension();
@@ -84,6 +87,7 @@ public class FileServiceImpl{
         } catch (IOException e) {
             log.warn(e.getMessage());
             log.warn("저장 안됨.");
+            throw new BaseException(ErrorCode.FILE_READ_ERROR);
         }
 
         UploadFile uploadFile = UploadFile.builder()
@@ -102,57 +106,46 @@ public class FileServiceImpl{
 
     public List<FileResponse.FileLogDto> getUploadLog(){
         //fixme member값 가져오기
+        //        Member member = memberRepository.findMemberByEmail(principal.getAttributes().get("email").toString())
+        //                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
         Member member = null;
 
         List<UploadFile> uploadFiles = fileRepository.findUploadFilesByMember(member);
+        if(uploadFiles.isEmpty()) throw new BaseException(ErrorCode.FILELOG_NOT_FOUND);
         List<FileResponse.FileLogDto> logDtos = new ArrayList<>();
 
-        for(UploadFile file: uploadFiles){
-            logDtos.add(
-                    FileResponse.FileLogDto.from(file)
-            );
-        }
-
+        for(UploadFile file: uploadFiles) logDtos.add(FileResponse.FileLogDto.from(file));
         return logDtos;
     }
 
     public List<DataDto> readData(FileRequest.MappingResultDto mappingResultDto){
+        log.info("[File] Mapping Controller 진입");
 
-        UploadFile uploadFile = fileRepository.findUploadFileByFileId(mappingResultDto.fileId());
-        if(uploadFile==null){
-            log.warn("upload파일 발견 안됨");
-        }
+        UploadFile uploadFile = getFileById(mappingResultDto.fileId()) ;
         log.info("fileId:{}",mappingResultDto.fileId());
-        log.info("파일 가져옴");
 
-        FileService fileService = processor.getHandlerMap().get(uploadFile.getFileType());
-
+        FileService fileService = getFileServiceByFileType(uploadFile.getFileType());
         List<DataDto> dataDtos = new ArrayList<>();
+
         try{
             dataDtos = fileService.readFileData(uploadFile, mappingResultDto.headers());
         }catch (Exception e){
             log.error(e.getMessage());
+            throw new BaseException(ErrorCode.FILE_READ_ERROR);
         }
 
         return dataDtos;
     }
 
-//    public List<DataDto> readFileData(FileRequest.MappingResultDto mappingResultDto){
-//
-//        log.info("fileId:{}",mappingResultDto.fileId());
-//        UploadFile uploadFile = fileRepository.findUploadFileByFileId(mappingResultDto.fileId());
-//        log.info("파일 가져옴");
-//
-//        List<DataDto> dataDtos = new ArrayList<>();
-//        try{
-//            dataDtos = readFileData(uploadFile, mappingResultDto.headers());
-//        }catch (Exception e){
-//            log.error(e.getMessage());
-//        }
-//
-//        return dataDtos;
-//    }
+    public UploadFile getFileById(String fileId){
+        return fileRepository.findUploadFileByFileId(fileId).
+                orElseThrow(() -> new BaseException(ErrorCode.FILE_NOT_FOUND));
+    }
 
-
+    public FileService getFileServiceByFileType(FileType fileType){
+        FileService fileService = processor.getHandlerMap().get(fileType);
+        if(fileService==null) throw new BaseException(ErrorCode.FILE_EXTENSION_ERROR);
+        return fileService;
+    }
 
 }

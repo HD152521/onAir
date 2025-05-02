@@ -6,6 +6,7 @@ import com.sejong.project.onair.domain.file.model.FileData;
 import com.sejong.project.onair.domain.file.model.FileType;
 import com.sejong.project.onair.domain.file.model.UploadFile;
 import com.sejong.project.onair.domain.file.repository.FileDataRepository;
+import com.sejong.project.onair.global.exception.BaseException;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -74,35 +75,30 @@ public class FileServiceCsv implements FileService{
     }
 
     public List<DataDto> readFileData(UploadFile uploadFile, List<Integer> headers){
+        log.info("[File] CSV 서비스 readFileData 진입");
         List<FileData> datas = new ArrayList<>();
-
         try {
-            log.info("path가져오기 전");
             Path path = Paths.get(uploadFile.getFilePath());
-            log.info("path가져옴 ");
+            log.info("파일 path가져옴");
 
             // 인코딩 감지를 위한 스트림 설정
             BufferedInputStream bis = new BufferedInputStream(Files.newInputStream(path));
-            log.info("test1");
             bis.mark(4096); // reset용
-            log.info("test2");
             String encoding = detectCharset(bis);
-            log.info("test3");
             bis.reset();
+            log.info("[File] CSV path값으로 buffer가져오기");
 
-            log.info("try문 진입전");
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(bis, Charset.forName(encoding)))) {
                 String line;
                 int rowCnt = 0;
-                log.info("파일 읽기 바로 전");
                 while ((line = reader.readLine()) != null) {
                     rowCnt++;
                     if (rowCnt == 1) continue; // 헤더는 건너뜀
 
                     String[] tokens = line.split(",");
-
                     LocalDateTime time = null;
                     try {
+                        //Fixme time 값 자꾸 null로 가져옴.
                         time = LocalDateTime.parse(tokens[headers.get(0)-1].trim());
                     } catch (Exception ignored) {}
 
@@ -155,10 +151,11 @@ public class FileServiceCsv implements FileService{
                 }
             }
         } catch (Exception e) {
-            log.warn("CSV read error: {}", e.getMessage());
+            log.warn("[File] CSV read error: {}", e.getMessage());
         }
 
         List<DataDto> dataDtos = new ArrayList<>();
+
         for (FileData data : datas) {
             if (data == null) continue;
             fileDataRepository.save(data);
@@ -170,28 +167,35 @@ public class FileServiceCsv implements FileService{
 
     private String parseString(String[] tokens, int index) {
         index--;
-        if (index >= tokens.length) return null;
+        if(checkData(tokens,index)) return null;
         return tokens[index].trim();
     }
 
     private double parseDouble(String[] tokens, int index) {
-        index--;
-        if (index >= tokens.length) return 0.0;
+        if(checkData(tokens,index)) return 0.0;
         try {
             return Double.parseDouble(tokens[index].trim());
         } catch (NumberFormatException e) {
+            log.info("[File] CSV 파일 값을 읽는 도중 double값이 아닌 값을 발견");
             return 0.0;
         }
     }
 
     private int parseInt(String[] tokens, int index) {
         index--;
-        if (index >= tokens.length) return 0;
+        if(checkData(tokens,index)) return 0;
         try {
             return (int)Double.parseDouble(tokens[index].trim());
         } catch (NumberFormatException e) {
+            log.info("[File] CSV 파일 값을 읽는 도중 int 값이 아닌 값을 발견");
             return 0;
         }
 
+    }
+
+    private boolean checkData(String[] tokens,int index){
+        if (index >= tokens.length) return false;
+        if (tokens[index].isBlank()) return false;
+        return true;
     }
 }

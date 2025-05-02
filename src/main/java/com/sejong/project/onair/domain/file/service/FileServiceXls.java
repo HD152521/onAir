@@ -152,12 +152,19 @@ public class FileServiceXls implements FileService {
 
     private String getStringCellValue(Row row, int idx) {
         Cell cell = row.getCell(idx);
-        return (cell == null) ? null : cell.toString().trim();
+        if(cell == null){
+            log.info("[File] 해당 데이터가 null임");
+            return null;
+        }
+        return cell.toString().trim();
     }
 
     private double getDoubleCellValue(Row row, int idx) {
         Cell cell = row.getCell(idx);
-        if (cell == null) return 0.0;
+        if (cell == null){
+            log.info("[File] 해당 데이터가 null임");
+            return 0.0;
+        }
 
         if (cell.getCellType() == CellType.NUMERIC) {
             return cell.getNumericCellValue();
@@ -165,6 +172,7 @@ public class FileServiceXls implements FileService {
             try {
                 return Double.parseDouble(cell.toString());
             } catch (NumberFormatException e) {
+                log.info("[File] Xls 형변환 실패");
                 return 0.0;
             }
         }
@@ -173,5 +181,6 @@ public class FileServiceXls implements FileService {
     private int getIntCellValue(Row row, int idx) {
         return (int) getDoubleCellValue(row, idx);
     }
+
 
 }
