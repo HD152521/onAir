@@ -43,7 +43,13 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.OPTIONS,"/**/*").permitAll() //preflight요청 허용함.
                                 .requestMatchers(CorsUtils::isPreFlightRequest).permitAll() //preflight요청 허용함.
                                 .requestMatchers("/login/**", "/home/**","/test").permitAll()
-                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**","/api-test").permitAll()
+                                .requestMatchers( "/v3/api-docs",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/swagger-resources/**",
+                                        "/api-test"
+                                        ,"/api-test").permitAll()
                         //fixme 임시로 허용 해주는거 나중에 지우기 (test위해서임)
                         .requestMatchers("/file/**").permitAll()
                                 .anyRequest().authenticated()

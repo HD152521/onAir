@@ -96,6 +96,10 @@ public class FileServiceCsv implements FileService{
                     if (rowCnt == 1) continue; // 헤더는 건너뜀
 
                     String[] tokens = line.split(",");
+
+                    //Note 테스트용 출력문
+                    printData(tokens);
+
                     LocalDateTime time = null;
                     try {
                         //Fixme time 값 자꾸 null로 가져옴.
@@ -197,5 +201,12 @@ public class FileServiceCsv implements FileService{
         if (index >= tokens.length) return false;
         if (tokens[index].isBlank()) return false;
         return true;
+    }
+
+    private void printData(String[] tokens){
+        for(int i=0;i< tokens.length;i++){
+            System.out.print(tokens[i]+" | ");
+        }
+        System.out.println();
     }
 }
