@@ -6,6 +6,7 @@ import com.sejong.project.onair.domain.file.dto.FileRequest;
 import com.sejong.project.onair.domain.file.dto.FileResponse;
 import com.sejong.project.onair.domain.file.service.FileService;
 import com.sejong.project.onair.domain.file.service.FileServiceImpl;
+import com.sejong.project.onair.global.exception.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,18 +21,18 @@ public class FileController {
     private final FileServiceImpl fileService;
 
     @PostMapping("/upload")
-    public FileResponse.HeaderDto uploadFile(@RequestParam("file") MultipartFile file){
-        return fileService.uploadFile(file);
+    public BaseResponse<?> uploadFile(@RequestParam("file") MultipartFile file){
+        return BaseResponse.onSuccess(fileService.uploadFile(file));
     }
 
     @PostMapping("/mapping")
-    public List<DataDto> mappingData(@RequestBody FileRequest.MappingResultDto mappingResultDto){
-        return fileService.readData(mappingResultDto);
+    public BaseResponse<?> mappingData(@RequestBody FileRequest.MappingResultDto mappingResultDto){
+        return BaseResponse.onSuccess(fileService.readData(mappingResultDto));
     }
 
     @GetMapping("/upload/log")
-    public List<FileResponse.FileLogDto> getUploadLog(){
-        return fileService.getUploadLog();
+    public BaseResponse<?>  getUploadLog(){
+        return BaseResponse.onSuccess(fileService.getUploadLog());
     }
 
 }

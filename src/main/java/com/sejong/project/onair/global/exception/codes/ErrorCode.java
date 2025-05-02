@@ -84,6 +84,8 @@ public enum ErrorCode implements BaseCode {
     NOT_VALID_ROLE(HttpStatus.BAD_REQUEST,"G020","리더가 아니라 해당 기능은 불가"),
 
     NOT_VALID_MEMBERFOOD(HttpStatus.BAD_REQUEST,"G021","멤버 음식이 널 값이다."),
+
+    POST_NOT_FOUND(HttpStatus.BAD_REQUEST,"POST-0000","게시글을 찾을 수 없음"),
     
     //자잘한 에러
     SEARCH_KEYWORD_TOO_SHORT(HttpStatus.BAD_REQUEST, "KEYWORD-0000", "검색어는 3글자부터 입력하세요."),
@@ -101,6 +103,7 @@ public enum ErrorCode implements BaseCode {
     EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN-0000", "토큰 오류"),
     EMPTY_TOKEN_PROVIDED(HttpStatus.UNAUTHORIZED, "TOKEN-0002", "토큰 텅텅"),
     INVALID_EMAIL_OR_PASSWORD(HttpStatus.NOT_FOUND, "MEMBER-0001", "유효하지 않는 이메일, 비번"),
+    BAD_REQUEST_INGRANT(HttpStatus.BAD_REQUEST, "MEMBER-0002", "구글 권한이 제대로 넘어오지 않음."),
 
     // 5xx : server error
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER-0000", "서버 에러");
