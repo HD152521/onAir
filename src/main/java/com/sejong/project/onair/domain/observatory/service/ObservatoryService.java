@@ -92,14 +92,10 @@ public class ObservatoryService {
 
     @Transactional
     public Observatory addObservatory(ObservatoryRequest.addDto request){
-        //todo request값이 제대로 들어왔는지 확인하기
         Observatory observatory = ObservatoryRequest.addDto.to(request);
         observatoryRepository.save(observatory);
         return observatory;
     }
-
-
-
 
     public String getObservatoryData(){
         StringBuilder sb =null;
@@ -108,7 +104,7 @@ public class ObservatoryService {
             StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B552584/MsrstnInfoInqireSvc/getMsrstnList"); /*URL*/
             urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "="+ serviceKey); /*Service Key*/
             urlBuilder.append("&" + URLEncoder.encode("returnType","UTF-8") + "=" + URLEncoder.encode("json", "UTF-8")); /*xml 또는 json*/
-            urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("665", "UTF-8")); /*한 페이지 결과 수*/
+            urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("700", "UTF-8")); /*한 페이지 결과 수*/
             urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
 //            urlBuilder.append("&" + URLEncoder.encode("addr","UTF-8") + "=" + URLEncoder.encode("서울", "UTF-8")); /*주소*/
 //            urlBuilder.append("&" + URLEncoder.encode("stationName","UTF-8") + "=" + URLEncoder.encode("종로구", "UTF-8")); /*측정소명*/
@@ -136,5 +132,10 @@ public class ObservatoryService {
         }
         return sb.toString();
     }
+
+    /*
+        TODO CONTROLLER
+            1. AIRKOREA기준 관측소 업데이트 하기 (없어진건 삭제, 생긴건 추가)
+     */
 
 }

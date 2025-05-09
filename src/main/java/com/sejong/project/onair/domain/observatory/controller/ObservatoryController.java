@@ -2,6 +2,7 @@ package com.sejong.project.onair.domain.observatory.controller;
 
 import com.sejong.project.onair.domain.observatory.dto.ObservatoryRequest;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
+import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryDataService;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryService;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +30,17 @@ public class ObservatoryController {
     private final ObservatoryService observatoryService;
 
     //Note AirKoreaAPI임
-    @GetMapping("/getData")
+    @GetMapping("/getData/allJson")
     public String getData(){
-        log.info("[controller] getData진입");
-        return observatoryDataService.getAirkoreaData();
+        log.info("[controller] data/get");
+        return observatoryDataService.getAirkoreaDataToString();
     }
 
+    @GetMapping("/getData/allObject")
+    public List<ObservatoryData> getDataObject(){
+        log.info("[controller] data/get");
+        return observatoryDataService.getAirkoreaDataToObject();
+    }
 
 
     @GetMapping("/get/airKorea")
@@ -42,6 +48,8 @@ public class ObservatoryController {
         log.info("[controller] getObservatoryData 진입");
         return observatoryService.getObservatoryData();
     }
+
+
     //Note CSV파일 입력해서 관측소 데이터 저장하기
     @GetMapping("/get/csv")
     public List<Observatory> readObservatoryByCsv(@RequestParam("file") MultipartFile file){
