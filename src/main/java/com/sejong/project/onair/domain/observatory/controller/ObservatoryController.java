@@ -1,5 +1,6 @@
 package com.sejong.project.onair.domain.observatory.controller;
 
+import com.sejong.project.onair.domain.observatory.dto.ObservatoryRequest;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryDataService;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryService;
@@ -27,27 +28,39 @@ public class ObservatoryController {
     private final ObservatoryDataService observatoryDataService;
     private final ObservatoryService observatoryService;
 
+    //Note AirKoreaAPI임
     @GetMapping("/getData")
     public String getData(){
         log.info("[controller] getData진입");
         return observatoryDataService.getAirkoreaData();
     }
 
-    @GetMapping("/getObservatoryData")
+
+
+    @GetMapping("/get/airKorea")
     public String getObservatoryData(){
         log.info("[controller] getObservatoryData 진입");
-        return observatoryDataService.getObservatoryData();
+        return observatoryService.getObservatoryData();
     }
-
     //Note CSV파일 입력해서 관측소 데이터 저장하기
-    @GetMapping("/getObservatory/csv")
-    public List<Observatory> getObservatoryDataByCsv(@RequestParam("file") MultipartFile file){
+    @GetMapping("/get/csv")
+    public List<Observatory> readObservatoryByCsv(@RequestParam("file") MultipartFile file){
         log.info("[controller] getObservatory/csv 진입");
         return observatoryService.readObserbatoryDataByCsv(file);
     }
-    @PostMapping("/addObservatory/csv")
-    public List<Observatory> addObservatoryDataByCsv(@RequestParam("file") MultipartFile file){
+    @PostMapping("/add/csv")
+    public List<Observatory> addObservatoryByCsv(@RequestParam("file") MultipartFile file){
         log.info("[controller] addObservatory/csv 진입");
         return observatoryService.addObserbatoryDataByCsv(file);
     }
+    @GetMapping("/getAll")
+    public List<Observatory> getAllObservatory(){
+        log.info("[controller] getAllObservatory 진입");
+        return observatoryService.getAllObservatory();
+    }
+    @PostMapping("/add")
+    public Observatory addObservatory(@RequestBody ObservatoryRequest.addDto request){
+        return observatoryService.addObservatory(request);
+    }
+
 }
