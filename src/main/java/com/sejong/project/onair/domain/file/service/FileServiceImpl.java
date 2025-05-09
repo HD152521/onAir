@@ -118,7 +118,7 @@ public class FileServiceImpl{
         return logDtos;
     }
 
-    public List<DataDto> readData(FileRequest.MappingResultDto mappingResultDto){
+    public List<DataDto> readMappingData(FileRequest.MappingResultDto mappingResultDto){
         log.info("[File] Mapping Controller 진입");
 
         UploadFile uploadFile = getFileById(mappingResultDto.fileId()) ;
@@ -146,6 +146,20 @@ public class FileServiceImpl{
         FileService fileService = processor.getHandlerMap().get(fileType);
         if(fileService==null) throw new BaseException(ErrorCode.FILE_EXTENSION_ERROR);
         return fileService;
+    }
+
+    public List<String> readData(MultipartFile file){
+        log.info("[File] readdata진입");
+        FileService fileService = getFileServiceByFileType(FileType.fromMimeType(file.getContentType()));
+        List<String> dataDtos = new ArrayList<>();
+        log.info("{} service 파일 호출",fileService);
+        try{
+            dataDtos = fileService.readAllData(file);
+        }catch (Exception e){
+            log.error(e.getMessage());
+            throw new BaseException(ErrorCode.FILE_READ_ERROR);
+        }
+        return dataDtos;
     }
 
 }

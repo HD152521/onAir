@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -21,25 +22,20 @@ public class Observatory extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String consultativeGroup;
     private String centerName;
-    private MeasuringType measuringType;
-    private String centerLocation;
-    private String centerCode;
+    private String address;
     private double latitue;     //위도
     private double longitude;   //경도
+    private String manageName;
+    private int year;
 
-
-    private enum MeasuringType{
-        CO2("CO2"),
-        CH4("CH4"),
-        BOTH("BOTH"),
-        NONE("NONE");
-
-        private final String type;
-
-        MeasuringType(String type){
-            this.type = type;
-        }
+    @Builder
+    public Observatory(String centerName, String address,double latitue, double longitude,String manageName,int year){
+        this.centerName = centerName;
+        this.address = address;
+        this.latitue = latitue;
+        this.longitude = longitude;
+        this.manageName = manageName;
+        this.year = year;
     }
 }

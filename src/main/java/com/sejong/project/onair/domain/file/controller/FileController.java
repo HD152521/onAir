@@ -34,7 +34,7 @@ public class FileController {
     @PostMapping("/mapping")
     @MappingFile
     public BaseResponse<?> mappingData(@RequestBody FileRequest.MappingResultDto mappingResultDto){
-        return BaseResponse.onSuccess(fileService.readData(mappingResultDto));
+        return BaseResponse.onSuccess(fileService.readMappingData(mappingResultDto));
     }
 
     @GetMapping("/upload/log")
@@ -43,4 +43,8 @@ public class FileController {
         return BaseResponse.onSuccess(fileService.getUploadLog());
     }
 
+    @GetMapping("/readData")
+    public BaseResponse<?> readData(@RequestParam("file") MultipartFile file){
+        return BaseResponse.onSuccess(fileService.readData(file));
+    }
 }

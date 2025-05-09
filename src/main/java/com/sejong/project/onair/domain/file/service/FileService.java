@@ -15,5 +15,5 @@ public interface FileService {
 
     List<String> readHeader(MultipartFile file);
     List<DataDto> readFileData(UploadFile uploadFile, List<Integer> headers);
-
+    List<String> readAllData(MultipartFile file);
 }

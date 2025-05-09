@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -188,7 +189,6 @@ public class FileServiceCsv implements FileService{
         return dataDtos;
 
     }
-
     private String parseString(String[] tokens, int index) {
         index--;
         if(checkData(tokens,index)) return null;
@@ -233,4 +233,22 @@ public class FileServiceCsv implements FileService{
         }
         System.out.println();
     }
+
+    public List<String> readAllData(MultipartFile file){
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+
+        } catch (IOException e) {
+            // 필요에 따라 예외 처리 방식을 변경하세요.
+            throw new RuntimeException("CSV 파일 읽기 실패", e);
+        }
+        return lines;
+    }
+
 }

@@ -36,7 +36,7 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         //path보고 안봐도 되는거 거르기
         String path = request.getServletPath();
-        if (path.startsWith("/login") || path.startsWith("/signup") || path.startsWith("/swagger")) {
+        if (path.startsWith("/login") || path.startsWith("/signup") || path.startsWith("/swagger") || path.startsWith("/observatory")) {
             filterChain.doFilter(request, response);
             return;
         }

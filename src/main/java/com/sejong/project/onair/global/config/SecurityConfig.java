@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                                 .requestMatchers(HttpMethod.OPTIONS,"/**/*").permitAll() //preflight요청 허용함.
                                 .requestMatchers(CorsUtils::isPreFlightRequest).permitAll() //preflight요청 허용함.
-                                .requestMatchers("/login/**", "/home/**","/test").permitAll()
+                                .requestMatchers("/login/**", "/home/**","/test","/observatory/**").permitAll()
                                 .requestMatchers( "/v3/api-docs",
                                         "/v3/api-docs/**",
                                         "/swagger-ui.html",

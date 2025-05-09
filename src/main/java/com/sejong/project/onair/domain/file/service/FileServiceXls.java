@@ -223,4 +223,8 @@ public class FileServiceXls implements FileService {
         }System.out.println();
     }
 
+    public List<String> readAllData(MultipartFile file){
+        return null;
+    }
+
 }

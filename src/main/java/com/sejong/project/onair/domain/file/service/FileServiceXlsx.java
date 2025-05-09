@@ -228,4 +228,8 @@ public class FileServiceXlsx implements FileService{
             System.out.print(row.getCell(i)+" | ");
         }System.out.println();
     }
+
+    public List<String> readAllData(MultipartFile file){
+        return null;
+    }
 }
