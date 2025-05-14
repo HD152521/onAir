@@ -5,19 +5,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.sejong.project.onair.domain.observatory.dto.ObservatoryDataRequest;
+import com.sejong.project.onair.domain.observatory.model.Observatory;
 import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
+import com.sejong.project.onair.domain.observatory.repository.ObservatoryDataRepository;
+import com.sejong.project.onair.global.exception.BaseException;
+import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,25 +30,129 @@ import java.util.List;
 public class ObservatoryDataService {
 
     private static final Logger log = LoggerFactory.getLogger(ObservatoryDataService.class);
-    String serviceKey="%2FNVRnCn1bzQ%2F4cga43dtjmuDuRGXfjO6aBApVgpK6FTXRkpXAIl1LNYLtc02sLwjlaBnKwTuALillxw%2BrKDtig%3D%3D";
+    private final AirKoreaApiService airKoreaApiService;
+    private final ObservatoryService observatoryService;
+    private final ObservatoryDataRepository observatoryDataRepository;
 
-    public String getAirkoreaDataToString(){
-        return getAirkoreaData();
+
+    private final List<String> failedList = new ArrayList<>();
+    private int lastHour = LocalDateTime.now().getHour();
+
+
+    public String getAirkoreaDataToString(ObservatoryDataRequest.nationDto request){
+        return airKoreaApiService.getDatabyObservatory(request.nation());
     }
 
-    public List<ObservatoryData> getAirkoreaDataToObject(){
-        return parseObservatoryDataList(getAirkoreaData());
+    public List<ObservatoryData> getAirkoreaDataToObject(ObservatoryDataRequest.nationDto request){
+        return parseObservatoryDataList(getAirkoreaDataToString(request),request.nation());
     }
 
+    public ObservatoryData getAirkoreaDataToObjectLast(String nation){
+        List<ObservatoryData> datas = parseObservatoryDataList(getAirkoreaDataToString(new ObservatoryDataRequest.nationDto(nation)),nation);
+        int len = datas.size();
+        return datas.get(len-1);
+    }
+
+    //note 관측소별 오늘 데이터 가져오기
+    public List<List<ObservatoryData>> getTodayObservatoryDataFromAirkorea(){
+        List<Observatory> observatories = observatoryService.getAllObservatory();
+        List<List<ObservatoryData>> allObservatoryData = new ArrayList<>();
+        for(int i=0;i<observatories.size();i++){
+            try{
+                String nation = observatories.get(i).getStationName();
+                allObservatoryData.add(getAirkoreaDataToObject(new ObservatoryDataRequest.nationDto(nation)));
+            }catch (Exception e){
+                log.warn(e.getMessage());
+                log.warn("[Service] getTodayObservatoryData {}번째 관측소 데이터 가져오는데 실패",i);
+            }
+        }
+        return allObservatoryData;
+    }
+
+    //note 관측소 별 마지막 데이터 가져오기   fixme 근데 필요한가?
+    public List<ObservatoryData> getCurrentlyObservatoryDataFromAirkorea(){
+        log.info("[Service] 관측소 별 최신 데이터 하나만 가져오기");
+        List<ObservatoryData> observatorieDatas = new ArrayList<>();
+        List<List<ObservatoryData>> todayObservatorieDatas = getTodayObservatoryDataFromAirkorea();
+
+        for(List<ObservatoryData> observatoryDataList : todayObservatorieDatas){
+            int lastindex = observatoryDataList.size()-1;
+            observatorieDatas.add(observatoryDataList.get(lastindex));
+        }
+
+        return observatorieDatas;
+    }
+
+    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
+    @Transactional
     public void updateObservatoryData(){
-        /*
-        todo
-         1. 일단 관측소 정보 가져와서 하나씩 데이터를 가져와야함.
-         2. 데이터를 저장함. 다만 가져온 데이터가 현재 시간 기준으로 맞는 시간인지 봄.
-            2-1) 맞으면 저장
-            2-2) 아닌 데이터들 센터명만 list로 따로 관리 10분마다 계속 가져옴. -> 시간 바뀔경우 그냥 null값으로 하고 버림
-         */
+        int currentHour = LocalDateTime.now().getHour();
 
+        if(currentHour != lastHour){
+            log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 시작");
+
+            //todo list에 있는 값 저장하기
+            failedList.clear();
+
+            List<List<ObservatoryData>> todayObservatoryData = getTodayObservatoryDataFromAirkorea();
+
+            for(List<ObservatoryData> observatoryDataList : todayObservatoryData){
+                int size = observatoryDataList.size()-1;
+                try{
+                    checkBeforeSave(observatoryDataList.get(size));
+                }catch (Exception e){
+                    String stationName = observatoryDataList.get(0).getStationName();
+                    log.warn("[Service] {} 관측소 업데이트 실패 / msg:{}",stationName,e.getMessage());
+                    failedList.add(stationName);
+                    continue;
+                }
+                observatoryDataRepository.save(observatoryDataList.get(size));
+            }
+            log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 완료!");
+
+        }else{
+            if(failedList.isEmpty()) return;
+            for(String station: failedList){
+                ObservatoryData data = getAirkoreaDataToObjectLast(station);
+                if(data.getDataTime().getHour() == LocalDateTime.now().getHour()){
+                    observatoryDataRepository.save(data);
+                    failedList.remove(station);
+                }
+            }
+        }
+
+    }
+
+    public void checkBeforeSave(ObservatoryData observatoryData){
+        checkAirkoreaUpdate(observatoryData);
+        checkAlreadySave(observatoryData);
+    }
+
+    public void checkAlreadySave(ObservatoryData observatoryData){
+        String station = observatoryData.getStationName();
+        ObservatoryData lastObservatoryData = observatoryDataRepository.findTopByStationNameOrderByDataTimeDesc(station);
+        if(observatoryData.getDataTime().equals(lastObservatoryData.getDataTime())) throw new BaseException(ErrorCode.AIRKOREA_API_ALREADY_UPDATE);
+
+    }
+
+    public void checkAirkoreaUpdate(ObservatoryData observatoryData){
+        LocalDateTime now = LocalDateTime.now();
+        if(observatoryData.getDataTime().getHour() != now.getHour()) throw new BaseException(ErrorCode.AIRKOREA_API_UPDATE_ERROR);
+    }
+
+    public List<ObservatoryData> getDatafromdate(ObservatoryDataRequest.rangeDto request){
+        LocalDate start = request.startDate();
+        LocalDate finish = request.endDate();
+        String stationName = request.nation();
+        log.info("[Service] {}부터 {}까지 {}데이터 가져오기 시작 ...",start,finish,stationName);
+
+        LocalDateTime startDateTime = start.atStartOfDay();
+        LocalDateTime endDateTime   = finish.atTime(LocalTime.MAX);
+        List<ObservatoryData> datas = observatoryDataRepository.findByStationNameAndDataTimeBetweenOrderByDataTimeAsc(stationName,startDateTime, endDateTime);
+        if(datas.isEmpty()){
+            log.warn("[Service] 해당 기간에 데이터가 없습니다.");
+        }
+        return datas;
     }
 
     /*
@@ -58,57 +166,13 @@ public class ObservatoryDataService {
 
      */
 
-
-    public String getAirkoreaData(){
-
-        /*
-            todo
-                1. 관측소명 가져오기
-                2. 마지막 데이터만 가져오고 싶은데
-         */
-
-        StringBuilder sb=null;
-        try {
-            StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty"); /*URL*/
-            //Note 필수
-            urlBuilder.append("?" + URLEncoder.encode("serviceKey", "UTF-8") + "="+serviceKey); /*Service Key*/
-            urlBuilder.append("&" + URLEncoder.encode("returnType", "UTF-8") + "=" + URLEncoder.encode("json", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("stationName", "UTF-8") + "=" + URLEncoder.encode("종로구", "UTF-8"));
-            urlBuilder.append("&" + URLEncoder.encode("dataTerm", "UTF-8") + "=" + URLEncoder.encode("DAILY", "UTF-8")); /*요청 데이터기간(1일: DAILY, 1개월: MONTH, 3개월: 3MONTH)*/
-            //Note 선택
-            urlBuilder.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode("100", "UTF-8")); /*한 페이지 결과 수*/
-            urlBuilder.append("&" + URLEncoder.encode("pageNo", "UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
-            urlBuilder.append("&" + URLEncoder.encode("ver", "UTF-8") + "=" + URLEncoder.encode("1.0", "UTF-8")); /*버전별 상세 결과 참고*/
-
-            URL url = new URL(urlBuilder.toString());
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Content-type", "application/json");
-            BufferedReader rd;
-
-            if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
-                rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            } else {
-                rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-            }
-
-            log.info("rd:{}",rd);
-
-            sb = new StringBuilder();
-            String line;
-            while ((line = rd.readLine()) != null) {
-                sb.append(line);
-            }
-            rd.close();
-            conn.disconnect();
-//            System.out.println(sb.toString());
-        }catch (Exception e){
-            log.warn("Airkorea데이터 가져오는데 실패");
-        }
-        return sb.toString();
+    public List<ObservatoryData> getCurrentlyDataFromDB(){
+        List<ObservatoryData> observatoryDataList = new ArrayList<>();
+        return observatoryDataList;
     }
 
-    public List<ObservatoryData> parseObservatoryDataList(String json){
+
+    public List<ObservatoryData> parseObservatoryDataList(String json,String stationName){
         List<ObservatoryData> list = new ArrayList<>();
         try{
             ObjectMapper mapper = new ObjectMapper();
@@ -133,9 +197,8 @@ public class ObservatoryDataService {
             if (items.isArray()) {
                 for (JsonNode node : items) {
                     // node → ObservatoryData 로 자동 변환
-                    log.info("[Service] parseObservatoryDataList 자동 변환 전");        
                     ObservatoryData data = mapper.treeToValue(node, ObservatoryData.class);
-                    log.info("[Service] parseObservatoryDataList 자동 변환  후");
+                    data.setStationName(stationName);
                     list.add(data);
                 }
             }

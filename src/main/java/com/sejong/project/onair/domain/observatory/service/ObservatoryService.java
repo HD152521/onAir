@@ -1,7 +1,13 @@
 package com.sejong.project.onair.domain.observatory.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sejong.project.onair.domain.observatory.dto.ObservatoryRequest;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
+import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
 import com.sejong.project.onair.domain.observatory.repository.ObservatoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -18,7 +24,9 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -26,8 +34,89 @@ public class ObservatoryService {
 
     private static final Logger log = LoggerFactory.getLogger(ObservatoryService.class);
     private final ObservatoryRepository observatoryRepository;
+    private final AirKoreaApiService airKoreaApiService;
 
     String serviceKey="%2FNVRnCn1bzQ%2F4cga43dtjmuDuRGXfjO6aBApVgpK6FTXRkpXAIl1LNYLtc02sLwjlaBnKwTuALillxw%2BrKDtig%3D%3D";
+
+
+    public String getAirkoreaToString(){
+        return airKoreaApiService.getObservatory();
+    }
+
+    public List<Observatory> getAirkoreaToObject(){
+        return parseObservatoryList(getAirkoreaToString());
+    }
+
+
+    public List<Observatory> getAllObservatory(){
+        List<Observatory> observatories = observatoryRepository.findAll();
+        if(observatories.isEmpty()){
+            log.warn("[Service] 모든 observatory 가져오는데 빈 값임");
+        }
+        return observatories;
+    }
+
+    @Transactional
+    public Observatory addObservatory(ObservatoryRequest.addDto request){
+        Observatory observatory = ObservatoryRequest.addDto.to(request);
+        observatoryRepository.save(observatory);
+        return observatory;
+    }
+
+
+
+    public List<Observatory> updateObservatoryFromAirkorea(){
+        List<Observatory> myObservatoreis = observatoryRepository.findAll();
+        List<Observatory> airkoreaObservatories =  getAirkoreaToObject();
+
+        List<Observatory> newObservatories = new ArrayList<>(airkoreaObservatories);
+        List<Observatory> deletedObservatories = new ArrayList<>(myObservatoreis);
+
+        newObservatories.removeAll(myObservatoreis);                //새로 생긴 Observatory
+        deletedObservatories.removeAll(airkoreaObservatories);      //삭제된 Observatory
+
+        log.info("[Service] updateObservatoryFromAirkorea newObservatories:{}",newObservatories);
+        log.info("[Service] updateObservatoryFromAirkorea deletedObservatories:{}",deletedObservatories);
+        if(newObservatories.isEmpty() && deletedObservatories.isEmpty()) log.info("[Service] 현재 관측소 정보가 최신입니다.");
+        return null;
+    }
+
+    public List<Observatory> parseObservatoryList(String json){
+        List<Observatory> list = new ArrayList<>();
+        try{
+            ObjectMapper mapper = new ObjectMapper();
+            // LocalDateTime 파싱 위해 모듈 등록
+            mapper.registerModule(new JavaTimeModule());
+
+            mapper.configure(MapperFeature.USE_ANNOTATIONS, true);
+            // JSON에 없는 프로퍼티 무시
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+            log.info("[Service] parseObservatoryList mapper");
+
+            JsonNode root = mapper.readTree(json);
+            JsonNode items = root
+                    .path("response")
+                    .path("body")
+                    .path("items");
+
+            log.info("[Service] parseObservatoryList JsonNode");
+
+            list = new ArrayList<>();
+            if (items.isArray()) {
+                for (JsonNode node : items) {
+                    // node → ObservatoryData 로 자동 변환
+                    Observatory data = mapper.treeToValue(node, Observatory.class);
+                    log.info("[Service] json->Observatory 성공");
+                    list.add(data);
+                }
+            }
+            log.info("[Service] parseObservatoryDataList list분해");
+        }catch (Exception e){
+            log.warn("json to Observatory객체 변환중 오류발생");
+        }
+        return list;
+    }
 
     public List<Observatory> readObserbatoryDataByCsv(MultipartFile file){
         List<String> lines = new ArrayList<>();
@@ -54,11 +143,11 @@ public class ObservatoryService {
                 }
 
                 Observatory obs = Observatory.builder()
-                        .centerName(tokens[0].trim())
-                        .address(tokens[1].trim())
-                        .latitue(Double.parseDouble(tokens[2].trim()))   // dmX: 위도
-                        .longitude(Double.parseDouble(tokens[3].trim())) // dmY: 경도
-                        .manageName(tokens[4].trim())
+                        .stationName(tokens[0].trim())
+                        .addr(tokens[1].trim())
+                        .dmX(Double.parseDouble(tokens[2].trim()))   // dmX: 위도
+                        .dmY(Double.parseDouble(tokens[3].trim())) // dmY: 경도
+                        .mangName(tokens[4].trim())
                         .year(Integer.parseInt(tokens[6].trim()))
                         .build();
 
@@ -81,61 +170,5 @@ public class ObservatoryService {
         }
         return observatories;
     }
-
-    public List<Observatory> getAllObservatory(){
-        List<Observatory> observatories = observatoryRepository.findAll();
-        if(observatories.isEmpty()){
-            log.warn("[Service] 모든 observatory 가져오는데 빈 값임");
-        }
-        return observatories;
-    }
-
-    @Transactional
-    public Observatory addObservatory(ObservatoryRequest.addDto request){
-        Observatory observatory = ObservatoryRequest.addDto.to(request);
-        observatoryRepository.save(observatory);
-        return observatory;
-    }
-
-    public String getObservatoryData(){
-        StringBuilder sb =null;
-        //Note 665개임
-        try{
-            StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B552584/MsrstnInfoInqireSvc/getMsrstnList"); /*URL*/
-            urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "="+ serviceKey); /*Service Key*/
-            urlBuilder.append("&" + URLEncoder.encode("returnType","UTF-8") + "=" + URLEncoder.encode("json", "UTF-8")); /*xml 또는 json*/
-            urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("700", "UTF-8")); /*한 페이지 결과 수*/
-            urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
-//            urlBuilder.append("&" + URLEncoder.encode("addr","UTF-8") + "=" + URLEncoder.encode("서울", "UTF-8")); /*주소*/
-//            urlBuilder.append("&" + URLEncoder.encode("stationName","UTF-8") + "=" + URLEncoder.encode("종로구", "UTF-8")); /*측정소명*/
-            URL url = new URL(urlBuilder.toString());
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Content-type", "application/json");
-            System.out.println("Response code: " + conn.getResponseCode());
-            BufferedReader rd;
-            if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
-                rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            } else {
-                rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-            }
-            sb = new StringBuilder();
-            String line;
-            while ((line = rd.readLine()) != null) {
-                sb.append(line);
-            }
-            rd.close();
-            conn.disconnect();
-            System.out.println(sb.toString());
-        }catch (Exception e){
-            log.warn("관측소 정보 가져오기 실패");
-        }
-        return sb.toString();
-    }
-
-    /*
-        TODO CONTROLLER
-            1. AIRKOREA기준 관측소 업데이트 하기 (없어진건 삭제, 생긴건 추가)
-     */
 
 }

@@ -110,6 +110,9 @@ public enum ErrorCode implements BaseCode {
     INVALID_EMAIL_OR_PASSWORD(HttpStatus.NOT_FOUND, "MEMBER-0001", "유효하지 않는 이메일, 비번"),
     BAD_REQUEST_INGRANT(HttpStatus.BAD_REQUEST, "MEMBER-0002", "구글 권한이 제대로 넘어오지 않음."),
 
+    AIRKOREA_API_UPDATE_ERROR(HttpStatus.BAD_REQUEST, "API-0000", "에어코리아에 최신 데이터가 존재하지 않음"),
+    AIRKOREA_API_ALREADY_UPDATE(HttpStatus.BAD_REQUEST, "API-0000", "해당 데이터는 이미 업데이트 함."),
+
     // 5xx : server error
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER-0000", "서버 에러");
 

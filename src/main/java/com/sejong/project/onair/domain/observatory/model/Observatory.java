@@ -1,16 +1,16 @@
 package com.sejong.project.onair.domain.observatory.model;
 
 import com.sejong.project.onair.global.entity.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+
+import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Entity
@@ -22,20 +22,34 @@ public class Observatory extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String centerName;
-    private String address;
-    private double latitue;     //위도
-    private double longitude;   //경도
-    private String manageName;
+    private String stationName;
+    private String addr;
+    private double dmX;     //위도
+    private double dmY;   //경도
+    private String mangName;
     private int year;
 
     @Builder
-    public Observatory(String centerName, String address,double latitue, double longitude,String manageName,int year){
-        this.centerName = centerName;
-        this.address = address;
-        this.latitue = latitue;
-        this.longitude = longitude;
-        this.manageName = manageName;
+    public Observatory(String stationName, String addr,double dmX, double dmY,String mangName,int year){
+        this.stationName = stationName;
+        this.addr = addr;
+        this.dmX = dmX;
+        this.dmY = dmY;
+        this.mangName = mangName;
         this.year = year;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Observatory)) return false;
+        Observatory that = (Observatory) o;
+        return Objects.equals(this.stationName, that.stationName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(stationName);
+    }
+
 }

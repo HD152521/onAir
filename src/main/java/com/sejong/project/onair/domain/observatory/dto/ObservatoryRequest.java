@@ -13,11 +13,11 @@ public class ObservatoryRequest{
     ){
         public static Observatory to(addDto request){
             return Observatory.builder()
-                    .centerName(request.centerName)
-                    .address(request.address)
-                    .latitue(request.latitue)
-                    .longitude(request.longitude)
-                    .manageName(request.manageName)
+                    .stationName(request.centerName)
+                    .addr(request.address)
+                    .dmX(request.latitue)
+                    .dmY(request.longitude)
+                    .mangName(request.manageName)
                     .year(request.year)
                     .build();
         }
