@@ -6,9 +6,12 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sejong.project.onair.domain.observatory.dto.ObservatoryRequest;
+import com.sejong.project.onair.domain.observatory.dto.ObservatoryResponse;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
 import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
 import com.sejong.project.onair.domain.observatory.repository.ObservatoryRepository;
+import com.sejong.project.onair.global.exception.BaseException;
+import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,10 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +53,7 @@ public class ObservatoryService {
         if(observatories.isEmpty()){
             log.warn("[Service] 모든 observatory 가져오는데 빈 값임");
         }
+        log.info("[Service] 모든 observatory데이터 가져옴.");
         return observatories;
     }
 
@@ -65,9 +66,9 @@ public class ObservatoryService {
 
 
 
-    public List<Observatory> updateObservatoryFromAirkorea(){
+    public ObservatoryResponse.UpdateDto updateObservatoryFromAirkorea() {
         List<Observatory> myObservatoreis = observatoryRepository.findAll();
-        List<Observatory> airkoreaObservatories =  getAirkoreaToObject();
+        List<Observatory> airkoreaObservatories = getAirkoreaToObject();
 
         List<Observatory> newObservatories = new ArrayList<>(airkoreaObservatories);
         List<Observatory> deletedObservatories = new ArrayList<>(myObservatoreis);
@@ -75,11 +76,17 @@ public class ObservatoryService {
         newObservatories.removeAll(myObservatoreis);                //새로 생긴 Observatory
         deletedObservatories.removeAll(airkoreaObservatories);      //삭제된 Observatory
 
-        log.info("[Service] updateObservatoryFromAirkorea newObservatories:{}",newObservatories);
-        log.info("[Service] updateObservatoryFromAirkorea deletedObservatories:{}",deletedObservatories);
-        if(newObservatories.isEmpty() && deletedObservatories.isEmpty()) log.info("[Service] 현재 관측소 정보가 최신입니다.");
-        return null;
+        log.info("[Service] updateObservatoryFromAirkorea newObservatories:{}", newObservatories);
+        log.info("[Service] updateObservatoryFromAirkorea deletedObservatories:{}", deletedObservatories);
+
+        if (newObservatories.isEmpty() && deletedObservatories.isEmpty()) log.info("[Service] 현재 관측소 정보가 최신입니다.");
+        observatoryRepository.deleteAll(deletedObservatories);
+        observatoryRepository.saveAll(newObservatories); //fixme 여기 지금 latitue 변수명 오류남 왜인지 모름
+        log.info("[Service] 업데이트 완료");
+
+        return new ObservatoryResponse.UpdateDto(newObservatories, deletedObservatories);
     }
+
 
     public List<Observatory> parseObservatoryList(String json){
         List<Observatory> list = new ArrayList<>();
@@ -107,7 +114,6 @@ public class ObservatoryService {
                 for (JsonNode node : items) {
                     // node → ObservatoryData 로 자동 변환
                     Observatory data = mapper.treeToValue(node, Observatory.class);
-                    log.info("[Service] json->Observatory 성공");
                     list.add(data);
                 }
             }
@@ -169,6 +175,11 @@ public class ObservatoryService {
             log.warn("[Service] csv데이터 mysql저장하는데 오류 발생");
         }
         return observatories;
+    }
+
+    public void checkObservatory(ObservatoryData observatoryData){
+        Observatory observatory =  observatoryRepository.findObservatoryByStationName(observatoryData.getStationName())
+                .orElseThrow(() -> new BaseException(ErrorCode.OBSERVATORY_NOT_FOUND));
     }
 
 }

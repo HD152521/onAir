@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.sejong.project.onair.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -28,8 +29,10 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties(ignoreUnknown = true)
 // 이 클래스의 인스턴스를 만들 때 ObservatoryDataBuilder를 쓰도록 지시
 @JsonDeserialize(builder = ObservatoryData.ObservatoryDataBuilder.class)
-public class ObservatoryData {
+public class ObservatoryData extends BaseEntity {
+
     private static final Logger log = LoggerFactory.getLogger(ObservatoryData.class);
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -88,8 +91,8 @@ public class ObservatoryData {
     @Transient
     @JsonProperty("dataTime")  // JSON 키 dataTime → 이 필드에 매핑
     private String dataTimeString;
-
     /** 일산화탄소 등급 */
+
     private Integer coGrade;
 
     /** 이산화질소 농도 (ppm) */
@@ -115,6 +118,16 @@ public class ObservatoryData {
                     log.warn("[OvservatoryData] 날짜 변환 오류");
                 }
             }
+    }
+
+    //널값인지 확인하기 위해 추가
+    @PostLoad
+    public void postLoad() {
+        if (this.dataTime != null) {
+            this.dataTimeString = this.dataTime.format(
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+            );
+        }
     }
 
     @JsonPOJOBuilder(withPrefix = "")

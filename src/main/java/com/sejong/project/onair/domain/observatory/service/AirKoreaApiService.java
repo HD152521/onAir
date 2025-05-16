@@ -55,12 +55,8 @@ public class AirKoreaApiService {
     }
 
     public String getDatabyObservatory(String nation){
-        /*
-            todo
-                1. 관측소명 가져오기
-                2. 마지막 데이터만 가져오고 싶은데
-         */
-        StringBuilder sb=null;
+        log.info("satation :{}",nation);
+        StringBuilder sb=new StringBuilder();
         try {
             StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty"); /*URL*/
             //Note 필수
@@ -87,7 +83,6 @@ public class AirKoreaApiService {
 
             log.info("rd:{}",rd);
 
-            sb = new StringBuilder();
             String line;
             while ((line = rd.readLine()) != null) {
                 sb.append(line);

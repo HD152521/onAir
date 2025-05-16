@@ -4,7 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class ObservatoryDataRequest {
-    public record rangeDto(
+    public record HourRangeDto(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            String nation
+    ){}
+
+    public record DayRangeDto(
             LocalDate startDate,
             LocalDate endDate,
             String nation

@@ -24,7 +24,7 @@ public class Observatory extends BaseEntity {
 
     private String stationName;
     private String addr;
-    private double dmX;     //위도
+    private double dmX;     //위도`
     private double dmY;   //경도
     private String mangName;
     private int year;

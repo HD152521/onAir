@@ -2,9 +2,9 @@ package com.sejong.project.onair.domain.observatory.controller;
 
 import com.sejong.project.onair.domain.observatory.dto.ObservatoryDataRequest;
 import com.sejong.project.onair.domain.observatory.dto.ObservatoryRequest;
+import com.sejong.project.onair.domain.observatory.dto.ObservatoryResponse;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
 import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
-import com.sejong.project.onair.domain.observatory.service.AirKoreaApiService;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryDataService;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryService;
 import lombok.RequiredArgsConstructor;
@@ -23,19 +23,25 @@ public class ObservatoryController {
 
     private final ObservatoryDataService observatoryDataService;
     private final ObservatoryService observatoryService;
-    private final AirKoreaApiService airKoreaApiService;
 
     //Note AirKoreaAPI임
     @GetMapping("/airkorea/getData/String")
     public String getData(@RequestBody ObservatoryDataRequest.nationDto request){
         log.info("[controller] data/get");
-        return observatoryDataService.getAirkoreaDataToString(request);
+        return observatoryDataService.getStringDatasFromAirkorea(request);
     }
 
     @GetMapping("/airkorea/getData/Object")
-    public List<ObservatoryData> getDataObject(ObservatoryDataRequest.nationDto request){
+    public List<ObservatoryData> getDataObject(@RequestBody ObservatoryDataRequest.nationDto request){
         log.info("[controller] data/get");
-        return observatoryDataService.getAirkoreaDataToObject(request);
+        return observatoryDataService.getObjectDatasFromAirkorea(request);
+    }
+
+    @GetMapping("/airkorea/getData/last")
+    //그냥 에어코리아에서 하나씩 가져오는거
+    public List<ObservatoryData> getLastDataFromAllObservatory(){
+        log.info("[Controller] getAllofData...");
+        return observatoryDataService.getLastObjectDatasFromAirkorea();
     }
 
     @GetMapping("/airkorea/get/String")
@@ -51,7 +57,7 @@ public class ObservatoryController {
     }
 
     @PostMapping("/airkorea/update")
-    public List<Observatory> updateObservatoryFromAirkorea(){
+    public ObservatoryResponse.UpdateDto updateObservatoryFromAirkorea(){
         log.info("[controller] /update/airkorea 진입 관측소 정보 업데이트");
         return observatoryService.updateObservatoryFromAirkorea();
     }
@@ -59,18 +65,30 @@ public class ObservatoryController {
 
 
     //Note 관측데이터 가져오기
-    @GetMapping("/getData/range")
-    public List<ObservatoryData> getDatafromRangeDate(@RequestBody ObservatoryDataRequest.rangeDto request){
+    @GetMapping("/data/get/day/range")
+    public List<ObservatoryData> getDatafromRangeDate(@RequestBody ObservatoryDataRequest.DayRangeDto request){
         log.info("[Controller] {}부터{}까지 {}지역",request.startDate(),request.endDate(),request.nation());
-        return observatoryDataService.getDatafromdate(request);
+        return observatoryDataService.getObjectDatasFromDBDate(request);
     }
 
-    @GetMapping("/getData/all")
-    public List<ObservatoryData> getDataAllOfObservatory(@RequestBody ObservatoryDataRequest.rangeDto request){
-        log.info("[Controller] getAllofData...");
-        return observatoryDataService.getCurrentlyObservatoryDataFromAirkorea();
+    @GetMapping("/data/get/hour/range")
+    public List<ObservatoryData> getDatafromRangeDate(@RequestBody ObservatoryDataRequest.HourRangeDto request){
+        log.info("[Controller] {}부터{}까지 {}지역",request.startDate(),request.endDate(),request.nation());
+        return observatoryDataService.getObjectDatasFromDBDate(request);
     }
 
+    @GetMapping("/data/get/all")
+    public List<ObservatoryData> getDataAllOfObservatory(){
+        //todo 모든거 하나씩 가져오기 from repo
+        return observatoryDataService.getDataAllFromDB();
+    }
+
+    @PostMapping("/data/update/all")
+    public String updateAllofObservatory(){
+        log.info("[Controller] upadte AllofData...");
+        observatoryDataService.updateObservatoryData();
+        return "Success";
+    }
 
     /*
     todo
