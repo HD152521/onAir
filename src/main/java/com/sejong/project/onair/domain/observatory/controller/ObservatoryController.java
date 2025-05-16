@@ -120,4 +120,9 @@ public class ObservatoryController {
         return observatoryService.addObservatory(request);
     }
 
+    @GetMapping("/get/loc")
+    public List<ObservatoryResponse.LocationDto> getObesrvatoryLoca(){
+        return observatoryService.getAllObservatoryLoca();
+    }
+
 }

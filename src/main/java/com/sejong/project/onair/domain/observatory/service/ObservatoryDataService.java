@@ -172,6 +172,7 @@ public class ObservatoryDataService {
 
 
     public List<ObservatoryData> getDataAllFromDB(){
+        //모든 flag 1아니면 버리기
         List<Observatory> observatories = observatoryService.getAllObservatory();
         List<ObservatoryData> datas = new ArrayList<>();
         for(Observatory ob : observatories){

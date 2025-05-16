@@ -182,4 +182,12 @@ public class ObservatoryService {
                 .orElseThrow(() -> new BaseException(ErrorCode.OBSERVATORY_NOT_FOUND));
     }
 
+    public List<ObservatoryResponse.LocationDto> getAllObservatoryLoca(){
+        List<Observatory> observatories = getAllObservatory();
+        List<ObservatoryResponse.LocationDto> observatorylocations = new ArrayList<>();
+        for(Observatory ob : observatories){
+            observatorylocations.add(ObservatoryResponse.LocationDto.from(ob));
+        }
+        return observatorylocations;
+    }
 }

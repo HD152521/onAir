@@ -9,4 +9,19 @@ public class ObservatoryResponse {
             List<Observatory> newObservatory,
             List<Observatory> deletedObservatory
     ){}
+
+    public record LocationDto(
+            double dmX,
+            double dmY,
+            String stationName
+    ){
+        public static LocationDto from(Observatory observatory){
+            return new LocationDto(
+                    observatory.getDmX(),
+                    observatory.getDmY(),
+                    observatory.getStationName()
+            );
+        }
+
+    }
 }
