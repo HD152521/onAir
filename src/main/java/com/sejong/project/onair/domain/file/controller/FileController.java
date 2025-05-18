@@ -47,4 +47,9 @@ public class FileController {
     public BaseResponse<?> readData(@RequestParam("file") MultipartFile file){
         return BaseResponse.onSuccess(fileService.readData(file));
     }
+
+    @GetMapping("/read/{fileId}")
+    public BaseResponse<?> readFileFromId(@PathVariable String fileId){
+        return BaseResponse.onSuccess(fileService.readDataFromId(fileId));
+    }
 }

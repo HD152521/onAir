@@ -3,8 +3,10 @@ package com.sejong.project.onair.domain.file.service;
 import com.sejong.project.onair.domain.file.dto.DataDto;
 import com.sejong.project.onair.domain.file.dto.FileRequest;
 import com.sejong.project.onair.domain.file.dto.FileResponse;
+import com.sejong.project.onair.domain.file.model.FileData;
 import com.sejong.project.onair.domain.file.model.FileType;
 import com.sejong.project.onair.domain.file.model.UploadFile;
+import com.sejong.project.onair.domain.file.repository.FileDataRepository;
 import com.sejong.project.onair.domain.file.repository.FileRepository;
 import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.global.beanProcessor.FileTypeHandlerProcessor;
@@ -35,6 +37,7 @@ public class FileServiceImpl{
 
     private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
     private final FileRepository fileRepository;
+    private final FileDataRepository fileDataRepository;
     private final FileTypeHandlerProcessor processor;
 
 
@@ -160,6 +163,19 @@ public class FileServiceImpl{
             throw new BaseException(ErrorCode.FILE_READ_ERROR);
         }
         return dataDtos;
+    }
+
+    public List<DataDto> readDataFromId(String fileId){
+        List<DataDto> response = new ArrayList<>();
+        List<FileData> datas = fileDataRepository.findFileDatasByFileId(fileId);
+        if(datas == null){
+            log.warn("해당 id 가진 파일존재 안함");
+            return null;
+        }
+        for(FileData data : datas){
+            response.add(DataDto.from(data));
+        }
+        return response;
     }
 
 }

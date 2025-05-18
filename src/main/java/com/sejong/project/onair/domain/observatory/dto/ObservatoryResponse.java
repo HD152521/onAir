@@ -1,12 +1,17 @@
 package com.sejong.project.onair.domain.observatory.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.graphbuilder.geom.Geom;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
+import org.apache.poi.ss.formula.functions.T;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ObservatoryResponse {
+
     public record UpdateDto(
             List<Observatory> newObservatory,
             List<Observatory> deletedObservatory
@@ -15,12 +20,13 @@ public class ObservatoryResponse {
 
     public record Geometry(
             String type,
-            LocationDto coordinates
+            @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+            double[] coordinates
     ){
         public static Geometry to (Observatory observatory){
             return new Geometry(
                 "Point",
-                    LocationDto.to(observatory)
+                    new double[]{ observatory.getDmY(), observatory.getDmX() }
             );
         }
     }
@@ -79,7 +85,7 @@ public class ObservatoryResponse {
 
     public record FeatureCollectionDto(
             String type,
-                ObservatoryDto features
+            ObservatoryDto features
     ){
         public static FeatureCollectionDto to(Observatory observatory){
             return new FeatureCollectionDto(

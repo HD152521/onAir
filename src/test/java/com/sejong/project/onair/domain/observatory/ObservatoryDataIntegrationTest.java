@@ -61,7 +61,6 @@ public class ObservatoryDataIntegrationTest {
                     .build();
 
             // PrePersist 로직으로 dataTime 필드 설정
-            data.prePersist();
             dataList.add(data);
         }
 
@@ -108,7 +107,6 @@ public class ObservatoryDataIntegrationTest {
                     .build();
 
             // PrePersist 로직으로 dataTime 필드 설정
-            data.prePersist();
             dataList.add(data);
         }
 

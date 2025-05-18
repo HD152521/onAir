@@ -1,7 +1,9 @@
 package com.sejong.project.onair.domain.file.dto;
 
+import com.sejong.project.onair.domain.file.model.FileData;
 import com.sejong.project.onair.domain.file.model.UploadFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class FileResponse {
@@ -36,4 +38,5 @@ public class FileResponse {
             );
         }
     }
+
 }
