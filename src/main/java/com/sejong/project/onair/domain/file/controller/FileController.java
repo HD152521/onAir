@@ -39,7 +39,7 @@ public class FileController {
 
     @GetMapping("/upload/log")
     @FileUploadLog
-    public BaseResponse<?>  getUploadLog(){
+    public BaseResponse<?> getUploadLog(){
         return BaseResponse.onSuccess(fileService.getUploadLog());
     }
 

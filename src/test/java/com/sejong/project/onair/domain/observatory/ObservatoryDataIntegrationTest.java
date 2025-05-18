@@ -5,11 +5,15 @@ import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
 import com.sejong.project.onair.domain.observatory.repository.ObservatoryDataRepository;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryService;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -22,6 +26,16 @@ public class ObservatoryDataIntegrationTest {
     private ObservatoryDataRepository observatoryDataRepository;
     @Autowired
     private ObservatoryService observatoryService;
+
+    @Autowired
+    private DataSource dataSource;
+    @Test
+    void printDataSource() throws Exception {
+        System.out.println(">> DataSource = " + dataSource);
+        try (Connection conn = dataSource.getConnection()) {
+            System.out.println(">> JDBC URL = " + conn.getMetaData().getURL());
+        }
+    }
 
     @Test
     @Transactional
@@ -61,6 +75,7 @@ public class ObservatoryDataIntegrationTest {
                     .build();
 
             // PrePersist 로직으로 dataTime 필드 설정
+            data.changeDate();
             dataList.add(data);
         }
 
@@ -69,8 +84,9 @@ public class ObservatoryDataIntegrationTest {
     }
 
     @Test
+    @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
     @Transactional
-    @Rollback(false)
+    @Commit
     void saveTestAllOfObservatoryDataToMySQL() {
         List<Observatory> observatories = observatoryService.getAllObservatory();
         List<ObservatoryData> dataList = new ArrayList<>();
@@ -107,9 +123,11 @@ public class ObservatoryDataIntegrationTest {
                     .build();
 
             // PrePersist 로직으로 dataTime 필드 설정
+            data.changeDate();
             dataList.add(data);
         }
-
+        System.out.println("observatories.size = " + observatories.size());
+        System.out.println("dataList.size = " + dataList.size());
         // MySQL에 저장
         observatoryDataRepository.saveAll(dataList);
     }

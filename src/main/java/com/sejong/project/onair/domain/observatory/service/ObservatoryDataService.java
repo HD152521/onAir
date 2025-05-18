@@ -237,6 +237,59 @@ public class ObservatoryDataService {
         return response;
     }
 
+    @Transactional
+    public List<ObservatoryDataResponse.FlagFilterDto> saveDummyData(){
+        List<Observatory> observatories = observatoryService.getAllObservatory();
+        List<ObservatoryData> dataList = new ArrayList<>();
+        // 시작 날짜: 2025-05-16 00:00
+        LocalDateTime start = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        log.info("[Service] dummy data 주입중...");
+        for (Observatory ob : observatories) {
+            String dateString = start.format(formatter);
+
+            ObservatoryData data = ObservatoryData.builder()
+                    .so2Grade(1)
+                    .coFlag(null)
+                    .khaiValue(50)
+                    .so2Value(0.005)
+                    .coValue(0.4)
+                    .pm25Flag(null)
+                    .pm10Flag(null)
+                    .pm10Value(30)
+                    .o3Grade(2)
+                    .khaiGrade(3)
+                    .pm25Value(20)
+                    .no2Flag(null)
+                    .no2Grade(1)
+                    .o3Flag(null)
+                    .pm25Grade(2)
+                    .so2Flag(null)
+                    .dataTimeString(dateString)
+                    .coGrade(1)
+                    .no2Value(0.02)
+                    .pm10Grade(2)
+                    .o3Value(0.03)
+                    .stationName(ob.getStationName())
+                    .build();
+
+            // PrePersist 로직으로 dataTime 필드 설정
+            data.changeDate();
+            dataList.add(data);
+        }
+        System.out.println("observatories.size = " + observatories.size());
+        System.out.println("dataList.size = " + dataList.size());
+        // MySQL에 저장
+        try{
+        observatoryDataRepository.saveAll(dataList);
+        }catch (Exception e){
+            log.warn(e.getMessage());
+        }
+        log.info("[Service] dummy data 주입 완료");
+        return ObservatoryDataResponse.FlagFilterDto.toAll(dataList);
+    }
+
     public List<ObservatoryData> parseObservatoryDataList(String json,String stationName){
         JsonNode tmpJson=null;
 

@@ -53,4 +53,9 @@ public class ObservatoryDataController {
         return BaseResponse.onSuccess(observatoryDataService.saveObjectDataFromJson(json,nation));
     }
 
+    @PostMapping("/data/dummy")
+    public BaseResponse<?> saveDummyData(){
+        return BaseResponse.onSuccess(observatoryDataService.saveDummyData());
+    }
+
 }
