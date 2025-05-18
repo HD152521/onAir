@@ -1,5 +1,6 @@
 package com.sejong.project.onair.domain.observatory.dto;
 
+import com.graphbuilder.geom.Geom;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
 
 import java.util.ArrayList;
@@ -11,30 +12,94 @@ public class ObservatoryResponse {
             List<Observatory> deletedObservatory
     ){}
 
+
+    public record Geometry(
+            String type,
+            LocationDto coordinates
+    ){
+        public static Geometry to (Observatory observatory){
+            return new Geometry(
+                "Point",
+                    LocationDto.to(observatory)
+            );
+        }
+    }
+
     public record LocationDto(
             double dmX,
-            double dmY,
-            String stationName
+            double dmY
     ){
-        public static LocationDto from(Observatory observatory){
+        public static LocationDto to (Observatory observatory){
             return new LocationDto(
                     observatory.getDmX(),
-                    observatory.getDmY(),
+                    observatory.getDmY()
+            );
+        }
+    }
+
+    public record Properties(
+            String stationName
+            //note 추가로 필요한 정보가능
+    ){
+        public static Properties to(Observatory observatory){
+            return new Properties(
                     observatory.getStationName()
             );
         }
+    }
 
-        public static List<LocationDto> fromAll(List<Observatory> observatories){
-            List<LocationDto> dtos = new ArrayList<>();
+    public record ObservatoryDto(
+            String type,
+            String id,
+            Geometry geometry,
+            Properties properties
+    ){
+        public static ObservatoryDto to (Observatory observatory){
+            return new ObservatoryDto(
+                    "Feature",
+                    observatory.getStationName(),
+                    Geometry.to(observatory),
+                    Properties.to(observatory)
+            );
+        }
+
+        public static List<ObservatoryDto> toAll (List<Observatory> observatories){
+            List<ObservatoryDto> dtos = new ArrayList<>();
             for(Observatory ob : observatories){
-                dtos.add(new LocationDto(
-                        ob.getDmX(),
-                        ob.getDmY(),
-                        ob.getStationName()
+                dtos.add(new ObservatoryDto(
+                        "Feature",
+                        ob.getStationName(),
+                        Geometry.to(ob),
+                        Properties.to(ob)
                 ));
             }
             return dtos;
         }
-
     }
+
+    public record FeatureCollectionDto(
+            String type,
+                ObservatoryDto features
+    ){
+        public static FeatureCollectionDto to(Observatory observatory){
+            return new FeatureCollectionDto(
+                    "FeatureCollection",
+                    ObservatoryDto.to(observatory)
+                    );
+        }
+
+        public static List<FeatureCollectionDto> toAll(List<Observatory> observatories){
+            List<FeatureCollectionDto> dtos = new ArrayList<>();
+            for(Observatory  ob: observatories){
+                dtos.add(
+                        new FeatureCollectionDto(
+                                "FeatureCollection",
+                                ObservatoryDto.to(ob)
+                        )
+                );
+            }
+            return dtos;
+        }
+    }
+
 }
