@@ -67,7 +67,15 @@ public class ObservatoryDataService {
     public List<ObservatoryData> saveObjectDataFromJson(String json,String nation){
         log.info("json:{}",json);
         List<ObservatoryData> datas = parseObservatoryDataList(json,nation);
-        observatoryDataRepository.saveAll(datas);
+        try{
+            for(ObservatoryData obd: datas){
+                checkBeforeSave(obd);
+                log.info(obd.toString());
+            }
+            observatoryDataRepository.saveAll(datas);
+        }catch (Exception e){
+            log.warn(e.getMessage());
+        }
         return datas;
     }
 
@@ -119,7 +127,7 @@ public class ObservatoryDataService {
         Random rand = new Random();
 
         for(int i=0;i<10;i++){
-            Observatory tmp = observatories.get(rand.nextInt(665)+1);
+            Observatory tmp = observatories.get(rand.nextInt(664)+1);
             try {
                 observatorieDatas.add(getLastObjectDataFromAirkorea(tmp.getStationName()));
             }catch(Exception e){
@@ -135,7 +143,8 @@ public class ObservatoryDataService {
 //    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
     @Transactional
     public void updateObservatoryData(){
-        int currentHour = LocalDateTime.now().getHour();
+//        int currentHour = LocalDateTime.now().getHour();
+        int currentHour = -10;
         log.info("[Service] update서비스 들어옴 시간:{} 시간:{}",currentHour,lastHour);
         List<ObservatoryData> saveList = new ArrayList<>();
 
@@ -152,7 +161,6 @@ public class ObservatoryDataService {
 
             for(ObservatoryData observatoryData : todayLastObservatoryData){
                 try{
-                    log.info("데이터 시간(1):{}",observatoryData.getDataTime());
                     checkBeforeSave(observatoryData);
                     saveList.add(observatoryData);
                 }catch (Exception e){
@@ -162,7 +170,7 @@ public class ObservatoryDataService {
                 }
             }
             observatoryDataRepository.saveAll(saveList);
-            lastHour=currentHour;
+            lastHour=LocalDateTime.now().getHour();
             log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 완료!");
             log.info("[Service] currentHour : {}, lastHour:{}",currentHour,lastHour);
         }else{
@@ -241,7 +249,7 @@ public class ObservatoryDataService {
     public List<ObservatoryDataResponse.FlagFilterDto> saveDummyData(){
         List<Observatory> observatories = observatoryService.getAllObservatory();
         List<ObservatoryData> dataList = new ArrayList<>();
-        // 시작 날짜: 2025-05-16 00:00
+
         LocalDateTime start = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -273,8 +281,6 @@ public class ObservatoryDataService {
                     .o3Value(0.03)
                     .stationName(ob.getStationName())
                     .build();
-
-            // PrePersist 로직으로 dataTime 필드 설정
             data.changeDate();
             dataList.add(data);
         }
@@ -282,7 +288,7 @@ public class ObservatoryDataService {
         System.out.println("dataList.size = " + dataList.size());
         // MySQL에 저장
         try{
-        observatoryDataRepository.saveAll(dataList);
+            observatoryDataRepository.saveAll(dataList);
         }catch (Exception e){
             log.warn(e.getMessage());
         }
@@ -341,13 +347,18 @@ public class ObservatoryDataService {
         return list;
     }
     public void checkBeforeSave(ObservatoryData observatoryData){
-        checkAirkoreaUpdate(observatoryData);
-        checkAlreadySave(observatoryData);
-        observatoryService.checkObservatory(observatoryData);
+        try{
+            checkAirkoreaUpdate(observatoryData);
+            checkAlreadySave(observatoryData);
+            observatoryService.checkObservatory(observatoryData);
+        }catch (Exception e){
+            throw e;
+        }
     }
 
 
     public void checkFlag(ObservatoryData data){
+        log.info("flag값 확인 flag가 널 아니면 해당 변수 값을 널로 해줘야함");
         if (data.getSo2Flag() != null) {
             data.setSo2Value(null);
             data.setSo2Grade(null);
@@ -380,16 +391,17 @@ public class ObservatoryDataService {
     }
 
     public void checkAlreadySave(ObservatoryData observatoryData){
-        log.info("데이터 시간(3):{}",observatoryData.getDataTime());
+        log.info("데이터가 이미 있는지 확인");
         String station = observatoryData.getStationName();
         ObservatoryData lastObservatoryData = observatoryDataRepository.findTopByStationNameOrderByDataTimeDesc(station);
+        if(lastObservatoryData == null) return;
         if(observatoryData.getDataTime().equals(lastObservatoryData.getDataTime())) throw new BaseException(ErrorCode.AIRKOREA_API_ALREADY_UPDATE);
 
     }
 
     public void checkAirkoreaUpdate(ObservatoryData observatoryData){
+        log.info("에어코리아 데이터가 최신인지 확인 / 데이터 시간:{}",observatoryData.getDataTime().getHour());
         LocalDateTime now = LocalDateTime.now();
-        log.info("데이터 시간(2):{}",observatoryData.getDataTime().getHour());
         if(observatoryData.getDataTime().getHour() != now.getHour()) throw new BaseException(ErrorCode.AIRKOREA_API_UPDATE_ERROR);
     }
 
