@@ -179,8 +179,8 @@ public class ObservatoryService {
                 .orElseThrow(() -> new BaseException(ErrorCode.OBSERVATORY_NOT_FOUND));
     }
 
-    public List<ObservatoryResponse.FeatureCollectionDto> getAllObservatoryLoca(){
+    public ObservatoryResponse.FeatureCollectionDto getAllObservatoryLoca(){
         List<Observatory> observatories = getAllObservatory();
-        return ObservatoryResponse.FeatureCollectionDto.toAll(observatories);
+        return ObservatoryResponse.FeatureCollectionDto.from(observatories);
     }
 }

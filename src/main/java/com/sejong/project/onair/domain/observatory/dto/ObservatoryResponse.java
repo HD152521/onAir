@@ -85,26 +85,17 @@ public class ObservatoryResponse {
 
     public record FeatureCollectionDto(
             String type,
-            ObservatoryDto features
+            List<ObservatoryDto> features
     ){
-        public static FeatureCollectionDto to(Observatory observatory){
+        public static FeatureCollectionDto from(List<Observatory> observatories){
+            List<ObservatoryDto> obDtos = new ArrayList<>();
+            for(Observatory  ob: observatories){
+                obDtos.add(ObservatoryDto.to(ob));
+            }
             return new FeatureCollectionDto(
                     "FeatureCollection",
-                    ObservatoryDto.to(observatory)
-                    );
-        }
-
-        public static List<FeatureCollectionDto> toAll(List<Observatory> observatories){
-            List<FeatureCollectionDto> dtos = new ArrayList<>();
-            for(Observatory  ob: observatories){
-                dtos.add(
-                        new FeatureCollectionDto(
-                                "FeatureCollection",
-                                ObservatoryDto.to(ob)
-                        )
-                );
-            }
-            return dtos;
+                    obDtos
+            );
         }
     }
 
