@@ -19,11 +19,6 @@ spring:
     charset: utf8mb4
     collation: utf8mb4_unicode_ci
 
-#railway용임
-  devtools:
-    restart:
-      enabled: false
-
   security:
     oauth2:
       client:
@@ -47,4 +42,4 @@ jwt:
   secret: ZGZsbTJwM2ttZndlb2lmbjEzOTRnbnVxZWYxMjM1Zmdhc2RmZzQ0NHdkZjM0YXNkZjhhc2RmOTM0ZA==
 
 server:
-  port: ${PORT:8080}
+  port: 8080
