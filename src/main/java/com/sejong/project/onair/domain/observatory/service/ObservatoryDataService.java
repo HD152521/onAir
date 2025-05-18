@@ -74,7 +74,7 @@ public class ObservatoryDataService {
     public ObservatoryData getLastObjectDataFromAirkorea(String nation){
         List<ObservatoryData> datas = parseObservatoryDataList(getStringDatasFromAirkorea(new ObservatoryDataRequest.nationDto(nation)),nation);
         int len = datas.size();
-        return datas.get(len-1);
+        return datas.get(0);
     }
 
     //note 관측소별 오늘 데이터 가져오기
@@ -149,8 +149,6 @@ public class ObservatoryDataService {
 //            List<ObservatoryData> todayLastObservatoryData = getLastObjectDatasFromAirkorea();
             //note random값 10개
             List<ObservatoryData> todayLastObservatoryData = getRandomObjectDatasFromAirkorea();
-
-            log.info("example:{}",todayLastObservatoryData.get(0).toString());
 
             for(ObservatoryData observatoryData : todayLastObservatoryData){
                 try{
