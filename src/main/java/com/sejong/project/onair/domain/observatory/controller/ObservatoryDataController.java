@@ -56,13 +56,13 @@ public class ObservatoryDataController {
     @GetMapping("/data/get/hour/range")
     public BaseResponse<?> getDataFromHourRange(
             @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime,
             @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime,
             @RequestParam String nation
     ) {
-        log.info("[Controller] {}부터 {}까지 {} 지역", startDate, endDate, nation);
-        var dto = new ObservatoryDataRequest.HourRangeDto(startDate, endDate, nation);
+        log.info("[Controller] {}부터 {}까지 {} 지역", startDateTime, endDateTime, nation);
+        var dto = new ObservatoryDataRequest.HourRangeDto(startDateTime, endDateTime, nation);
         return BaseResponse.onSuccess(
                 observatoryDataService.getObjectDatasFromDBDate(dto)
         );
