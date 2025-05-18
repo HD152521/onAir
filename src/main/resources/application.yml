@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://root:VlFQzFRKFMlgquumqaDPDPLwbAroNlqt@mysql.railway.internal:3306/railway?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
-    username: root
-    password: VlFQzFRKFMlgquumqaDPDPLwbAroNlqt
+    url: jdbc:mysql://mysql:3307/onAir?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
+    username: onAir
+    password: onAir123!@#
 #    url: jdbc:mysql://localhost:3306/onAir?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
 #    username: onAir
 #    password: onAir123!@#
