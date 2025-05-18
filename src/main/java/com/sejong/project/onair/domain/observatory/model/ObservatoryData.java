@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 @SQLDelete(sql = "UPDATE observatory_data SET is_deleted = true, deleted_at = now() where id = ?")
 @SQLRestriction("is_deleted is FALSE")
 @Getter
+@Setter
 @AllArgsConstructor
 @Builder
 // JSON에 없는 필드는 무시
@@ -107,19 +108,6 @@ public class ObservatoryData extends BaseEntity {
     @JsonProperty(value = "stationName", access = JsonProperty.Access.READ_ONLY)
     private String stationName;
 
-    @PrePersist
-    @PreUpdate
-    public void prePersist() {
-            if (this.dataTime == null && this.dataTimeString != null && !this.dataTimeString.isBlank()) {
-                try{
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                    this.dataTime = LocalDateTime.parse(this.dataTimeString, formatter);
-                }catch (Exception e){
-                    log.warn("[OvservatoryData] 날짜 변환 오류");
-                }
-            }
-    }
-
     //널값인지 확인하기 위해 추가
     @PostLoad
     public void postLoad() {
@@ -127,6 +115,17 @@ public class ObservatoryData extends BaseEntity {
             this.dataTimeString = this.dataTime.format(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             );
+        }
+    }
+
+    public void changeDate(){
+        if (this.dataTime == null && this.dataTimeString != null && !this.dataTimeString.isBlank()) {
+            try{
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                this.dataTime = LocalDateTime.parse(this.dataTimeString, formatter);
+            }catch (Exception e){
+                log.warn("[OvservatoryData] 날짜 변환 오류");
+            }
         }
     }
 
@@ -140,4 +139,33 @@ public class ObservatoryData extends BaseEntity {
         this.stationName = stationName;
     }
 
+    @Override
+    public String toString() {
+        return "ObservatoryData{" +
+                "id=" + id +
+                ", so2Grade=" + so2Grade +
+                ", coFlag='" + coFlag + '\'' +
+                ", khaiValue=" + khaiValue +
+                ", so2Value=" + so2Value +
+                ", coValue=" + coValue +
+                ", pm25Flag='" + pm25Flag + '\'' +
+                ", pm10Flag='" + pm10Flag + '\'' +
+                ", pm10Value=" + pm10Value +
+                ", o3Grade=" + o3Grade +
+                ", khaiGrade=" + khaiGrade +
+                ", pm25Value=" + pm25Value +
+                ", no2Flag='" + no2Flag + '\'' +
+                ", no2Grade=" + no2Grade +
+                ", o3Flag='" + o3Flag + '\'' +
+                ", pm25Grade=" + pm25Grade +
+                ", so2Flag='" + so2Flag + '\'' +
+                ", dataTime=" + dataTime +
+                ", dataTimeString='" + dataTimeString + '\'' +
+                ", coGrade=" + coGrade +
+                ", no2Value=" + no2Value +
+                ", pm10Grade=" + pm10Grade +
+                ", o3Value=" + o3Value +
+                ", stationName='" + stationName + '\'' +
+                '}';
+    }
 }

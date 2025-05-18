@@ -2,6 +2,7 @@ package com.sejong.project.onair.domain.observatory.dto;
 
 import com.sejong.project.onair.domain.observatory.model.Observatory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ObservatoryResponse {
@@ -21,6 +22,18 @@ public class ObservatoryResponse {
                     observatory.getDmY(),
                     observatory.getStationName()
             );
+        }
+
+        public static List<LocationDto> fromAll(List<Observatory> observatories){
+            List<LocationDto> dtos = new ArrayList<>();
+            for(Observatory ob : observatories){
+                dtos.add(new LocationDto(
+                        ob.getDmX(),
+                        ob.getDmY(),
+                        ob.getStationName()
+                ));
+            }
+            return dtos;
         }
 
     }

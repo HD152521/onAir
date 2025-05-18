@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sejong.project.onair.domain.observatory.dto.ObservatoryDataRequest;
+import com.sejong.project.onair.domain.observatory.dto.ObservatoryDataResponse;
+import com.sejong.project.onair.domain.observatory.dto.ObservatoryResponse;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
 import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
 import com.sejong.project.onair.domain.observatory.repository.ObservatoryDataRepository;
@@ -27,9 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -59,13 +63,19 @@ public class ObservatoryDataService {
         return parseObservatoryDataList(getStringDatasFromAirkorea(request),request.nation());
     }
 
+    @Transactional
+    public List<ObservatoryData> saveObjectDataFromJson(String json,String nation){
+        log.info("json:{}",json);
+        List<ObservatoryData> datas = parseObservatoryDataList(json,nation);
+        observatoryDataRepository.saveAll(datas);
+        return datas;
+    }
 
     public ObservatoryData getLastObjectDataFromAirkorea(String nation){
         List<ObservatoryData> datas = parseObservatoryDataList(getStringDatasFromAirkorea(new ObservatoryDataRequest.nationDto(nation)),nation);
         int len = datas.size();
         return datas.get(len-1);
     }
-
 
     //note 관측소별 오늘 데이터 가져오기
     public List<List<ObservatoryData>> getTodayObjectDataFromAirkorea(){
@@ -81,24 +91,46 @@ public class ObservatoryDataService {
                 log.warn("[Service] getTodayObservatoryData {}번째 관측소 데이터 가져오는데 실패",i);
             }
         }
-        log.info("[Service] observatory 최근 1개 데이터만 가져옴");
         return allObservatoryData;
     }
 
 
-    //note 관측소 별 마지막 데이터 가져오기   fixme 근데 필요한가?
+    //note 에어코리아에서 관측소 별 마지막 데이터 가져오기
     public List<ObservatoryData> getLastObjectDatasFromAirkorea(){
         log.info("[Service] 관측소 별 최신 데이터 하나만 가져오기");
+        List<Observatory> observatories = observatoryService.getAllObservatory();
         List<ObservatoryData> observatorieDatas = new ArrayList<>();
-        List<List<ObservatoryData>> todayObservatorieDatas = getTodayObjectDataFromAirkorea();
 
-        for(List<ObservatoryData> observatoryDataList : todayObservatorieDatas){
-            int lastindex = observatoryDataList.size()-1;
-            observatorieDatas.add(observatoryDataList.get(lastindex));
+        for(Observatory ob : observatories){
+            try {
+                observatorieDatas.add(getLastObjectDataFromAirkorea(ob.getStationName()));
+            }catch(Exception e){
+                log.info("[Service] {}관측소 데이터 가져오는데 실패", ob.getStationName());
+            }
+        }
+        return observatorieDatas;
+    }
+
+    public List<ObservatoryData> getRandomObjectDatasFromAirkorea(){
+        log.info("[Service] 관측소 별 최신 데이터 하나만 가져오기");
+        List<Observatory> observatories = observatoryService.getAllObservatory();
+        List<ObservatoryData> observatorieDatas = new ArrayList<>();
+
+        Random rand = new Random();
+
+        for(int i=0;i<10;i++){
+            Observatory tmp = observatories.get(rand.nextInt(665)+1);
+            try {
+                observatorieDatas.add(getLastObjectDataFromAirkorea(tmp.getStationName()));
+            }catch(Exception e){
+                log.info("[Service] {}관측소 데이터 가져오는데 실패", tmp.getStationName());
+            }
         }
 
         return observatorieDatas;
     }
+
+
 
 //    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
     @Transactional
@@ -113,10 +145,16 @@ public class ObservatoryDataService {
             //todo list에 있는 값 저장하기
             failedList.clear();
 
-            List<ObservatoryData> todayLastObservatoryData = getLastObjectDatasFromAirkorea();
+            //Note 모든거 하나씩 가져오기
+//            List<ObservatoryData> todayLastObservatoryData = getLastObjectDatasFromAirkorea();
+            //note random값 10개
+            List<ObservatoryData> todayLastObservatoryData = getRandomObjectDatasFromAirkorea();
+
+            log.info("example:{}",todayLastObservatoryData.get(0).toString());
 
             for(ObservatoryData observatoryData : todayLastObservatoryData){
                 try{
+                    log.info("데이터 시간(1):{}",observatoryData.getDataTime());
                     checkBeforeSave(observatoryData);
                     saveList.add(observatoryData);
                 }catch (Exception e){
@@ -130,6 +168,7 @@ public class ObservatoryDataService {
             log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 완료!");
             log.info("[Service] currentHour : {}, lastHour:{}",currentHour,lastHour);
         }else{
+            log.info("시간 달라서 실패한것만 확인함");
             if(failedList.isEmpty()) return;
             for(String station: failedList){
                 ObservatoryData data = getLastObjectDataFromAirkorea(station);
@@ -142,7 +181,7 @@ public class ObservatoryDataService {
     }
 
 
-    public List<ObservatoryData> getObjectDatasFromDBDate(ObservatoryDataRequest.DayRangeDto request){
+    public List<ObservatoryDataResponse.FlagFilterDto> getObjectDatasFromDBDate(ObservatoryDataRequest.DayRangeDto request){
         String stationName = request.nation();
         LocalDateTime startDateTime = request.startDate().atStartOfDay();
         LocalDateTime endDateTime   = request.endDate().atTime(LocalTime.MAX);
@@ -150,41 +189,54 @@ public class ObservatoryDataService {
         return getObjectDatasFromDBDate(new ObservatoryDataRequest.HourRangeDto(startDateTime,endDateTime, stationName));
     }
 
-    public List<ObservatoryData> getObjectDatasFromDBDate(ObservatoryDataRequest.HourRangeDto request){
+
+    public List<ObservatoryDataResponse.FlagFilterDto> getObjectDatasFromDBDate(ObservatoryDataRequest.HourRangeDto request){
         List<ObservatoryData> datas = new ArrayList<>();
+        List<ObservatoryDataResponse.FlagFilterDto> response = new ArrayList<>();
         try {
              datas = observatoryDataRepository.
                     findByStationNameAndDataTimeBetweenOrderByDataTimeAsc(
                             request.nation(),
                             request.startDate(),
                             request.endDate());
+            if(datas.isEmpty()) {
+                log.warn("[Service] 해당 기간에 데이터가 없습니다.");
+                throw new BaseException(ErrorCode.DATA_NOT_FOUND);
+                //todo 없을 경우 에어 코리아에서 가져오기
+            }
+            response = ObservatoryDataResponse.FlagFilterDto.toAll(datas);
         }catch (Exception e){
             log.warn(e.getMessage());
         }
-        if(datas.isEmpty()){
-            log.warn("[Service] 해당 기간에 데이터가 없습니다.");
-            //todo 없을 경우 에어 코리아에서 가져오기
-        }
-        return datas;
+        return response;
     }
 
-
-
-
-    public List<ObservatoryData> getDataAllFromDB(){
-        //모든 flag 1아니면 버리기
+    //note db에서 마지막 데이터만 가져옴
+    public List<ObservatoryDataResponse.FlagFilterDto> getLastDataAllFromDB(){
         List<Observatory> observatories = observatoryService.getAllObservatory();
-        List<ObservatoryData> datas = new ArrayList<>();
+        List<ObservatoryDataResponse.FlagFilterDto> response = new ArrayList<>();
         for(Observatory ob : observatories){
             try {
                 ObservatoryData tmpOb = observatoryDataRepository.findTopByStationNameOrderByDataTimeDesc(ob.getStationName());
-                datas.add(tmpOb);
+                response.add(ObservatoryDataResponse.FlagFilterDto.to(tmpOb));
             }catch (Exception e){
                 log.warn(e.getMessage());
                 log.warn("[Service] {} 마지막 데이터 가져오는데 오류",ob.getStationName());
             }
         }
-        return datas;
+        return response;
+    }
+
+    //todo 마지막 데이터 가져와서 현재 시간이랑 같은지 확인하기.
+    public List<ObservatoryDataResponse.FlagFilterDto> getNowDataAllFromDB(){
+        List<ObservatoryDataResponse.FlagFilterDto> dtos = getLastDataAllFromDB();
+        List<ObservatoryDataResponse.FlagFilterDto> response = new ArrayList<>();
+        int nowHour = LocalDateTime.now().getHour();
+
+        for(ObservatoryDataResponse.FlagFilterDto dto: dtos){
+            if(dto.dataTime().getHour()==nowHour) response.add(dto);
+        }
+        return response;
     }
 
     public List<ObservatoryData> parseObservatoryDataList(String json,String stationName){
@@ -208,7 +260,9 @@ public class ObservatoryDataService {
             log.info("[Service] parseObservatoryDataList mapper");
 
             JsonNode root = mapper.readTree(json);
+            //note json테스트 안하면 json빼기
             JsonNode items = root
+//                    .path("json")
                     .path("response")
                     .path("body")
                     .path("items");
@@ -223,6 +277,7 @@ public class ObservatoryDataService {
                     tmpJson = node;
                     ObservatoryData data = mapper.treeToValue(node, ObservatoryData.class);
                     data.setStationName(stationName);
+                    data.changeDate();
                     list.add(data);
                 }
             }
@@ -240,7 +295,41 @@ public class ObservatoryDataService {
         observatoryService.checkObservatory(observatoryData);
     }
 
+
+    public void checkFlag(ObservatoryData data){
+        if (data.getSo2Flag() != null) {
+            data.setSo2Value(null);
+            data.setSo2Grade(null);
+        }
+        // CO
+        if (data.getCoFlag() != null) {
+            data.setCoValue(null);
+            data.setCoGrade(null);
+        }
+        // NO2
+        if (data.getNo2Flag() != null) {
+            data.setNo2Value(null);
+            data.setNo2Grade(null);
+        }
+        // O3
+        if (data.getO3Flag() != null) {
+            data.setO3Value(null);
+            data.setO3Grade(null);
+        }
+        // PM10
+        if (data.getPm10Flag() != null) {
+            data.setPm10Value(null);
+            data.setPm10Grade(null);
+        }
+        // PM2.5
+        if (data.getPm25Flag() != null) {
+            data.setPm25Value(null);
+            data.setPm25Grade(null);
+        }
+    }
+
     public void checkAlreadySave(ObservatoryData observatoryData){
+        log.info("데이터 시간(3):{}",observatoryData.getDataTime());
         String station = observatoryData.getStationName();
         ObservatoryData lastObservatoryData = observatoryDataRepository.findTopByStationNameOrderByDataTimeDesc(station);
         if(observatoryData.getDataTime().equals(lastObservatoryData.getDataTime())) throw new BaseException(ErrorCode.AIRKOREA_API_ALREADY_UPDATE);
@@ -249,6 +338,7 @@ public class ObservatoryDataService {
 
     public void checkAirkoreaUpdate(ObservatoryData observatoryData){
         LocalDateTime now = LocalDateTime.now();
+        log.info("데이터 시간(2):{}",observatoryData.getDataTime().getHour());
         if(observatoryData.getDataTime().getHour() != now.getHour()) throw new BaseException(ErrorCode.AIRKOREA_API_UPDATE_ERROR);
     }
 

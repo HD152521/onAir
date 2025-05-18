@@ -113,6 +113,8 @@ public enum ErrorCode implements BaseCode {
     AIRKOREA_API_UPDATE_ERROR(HttpStatus.BAD_REQUEST, "API-0000", "에어코리아에 최신 데이터가 존재하지 않음"),
     AIRKOREA_API_ALREADY_UPDATE(HttpStatus.BAD_REQUEST, "API-0000", "해당 데이터는 이미 업데이트 함."),
 
+    DATA_NOT_FOUND(HttpStatus.BAD_REQUEST, "DATA-0000", "해당 데이터는 존재하지 않습니다."),
+
     OBSERVATORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "OBSERVATORY-0000", "해당 관측소는 존재하지 않습니다."),
 
     // 5xx : server error
