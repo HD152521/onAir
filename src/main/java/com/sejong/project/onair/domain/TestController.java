@@ -1,6 +1,7 @@
 package com.sejong.project.onair.domain;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 public class TestController {
     @RequestMapping("/test")
-    public String test(){
-        return "test";
+    public ResponseEntity<String> test(){
+        return ResponseEntity.ok("OK");
     }
 }
