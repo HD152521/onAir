@@ -15,18 +15,19 @@ services:
       - backend
 
   spring:
-    build:
-      context: ./../../../
-      dockerfile: Dockerfile
+#    build:
+#      context: ./../../../
+#      dockerfile: Dockerfile
+    #추가본
+    image: yong6/onair:latest
+
     container_name: spring-app
     ports:
       - "8080:8080"
     depends_on:
       - mysql
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/onAir
-      SPRING_DATASOURCE_USERNAME: onAir
-      SPRING_DATASOURCE_PASSWORD: onAir123!@#
+    env_file:
+      - db.env
     networks:
       - backend
 volumes:
