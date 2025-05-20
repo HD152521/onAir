@@ -26,4 +26,11 @@ public class MemberController {
         return memberService.googleLoginByToken(googleLoginDto,response);
     }
     //todo access refresh토큰 주는거 조금 더 보기
+
+    @PostMapping("/login/testuser")
+    MemberResponse.LoginResponseDto googleLoginByToken(HttpServletResponse response){
+        log.info("enter google controller");
+        return memberService.testLogin(response);
+    }
+
 }

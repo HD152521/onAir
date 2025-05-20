@@ -11,5 +11,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Service
 public interface MemberService {
     MemberResponse.LoginResponseDto googleLoginByToken(MemberRequest.GoogleLoginDto googleLoginDto, HttpServletResponse response);
+    MemberResponse.LoginResponseDto testLogin(HttpServletResponse response);
 
 }
