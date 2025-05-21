@@ -1,7 +1,9 @@
 package com.sejong.project.onair.global.token;
 
 
+import com.sejong.project.onair.domain.member.dto.MemberDetails;
 import com.sejong.project.onair.domain.member.model.Member;
+import com.sejong.project.onair.domain.member.service.MemberDetailsService;
 import com.sejong.project.onair.global.exception.BaseException;
 import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import com.sejong.project.onair.global.token.vo.AccessToken;
@@ -12,9 +14,13 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -34,14 +40,16 @@ public class JwtProvider implements TokenProvider {
 
     private final SecretKey SECRET_KEY;
     private final String ISS = "github.com/SophistRing";
-
+    private final MemberDetailsService memberDetailsService;
 
     public JwtProvider(
-            @Value("${jwt.secret}") String SECRET_KEY
+            @Value("${jwt.secret}") String SECRET_KEY,
+            MemberDetailsService memberDetailsService
     ) {
         byte[] keyBytes = Base64.getDecoder()
                 .decode(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         this.SECRET_KEY = new SecretKeySpec(keyBytes, "HmacSHA256");
+        this.memberDetailsService = memberDetailsService;
     }
 
     public AccessToken generateAccessToken(Member member) {
@@ -138,6 +146,17 @@ public class JwtProvider implements TokenProvider {
         catch (Exception e) {
             return false;
         }
+    }
+
+    public Authentication getAuthentication(String token){
+        String aud = parseAudience(token); // 토큰 Aud에 Member email을 기록하고 있음
+        MemberDetails userDetails = memberDetailsService.loadUserByUsername(aud); // memberId를 기반으로 조회
+        Authentication authentication
+                = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities());
+        return authentication;
     }
 }
 
