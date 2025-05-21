@@ -7,18 +7,23 @@ import com.sejong.project.onair.domain.member.repository.MemberRepository;
 import com.sejong.project.onair.global.Oauth.dto.GoogleTokenDto;
 import com.sejong.project.onair.global.Oauth.dto.GoogleUserProfileDto;
 import com.sejong.project.onair.global.Oauth.service.OAuth2UserAuthCodeServiceImpl;
+import com.sejong.project.onair.global.exception.BaseResponse;
 import com.sejong.project.onair.global.token.JwtProvider;
 import com.sejong.project.onair.global.token.vo.AccessToken;
 import com.sejong.project.onair.global.token.vo.RefreshToken;
 import com.sejong.project.onair.global.token.vo.TokenResponse;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -120,4 +125,37 @@ public class MemberServiceImpl implements MemberService{
         return tokenResponse;
     }
 
+    public ResponseEntity<BaseResponse<?>> updateRefreshToken(HttpServletRequest request, HttpServletResponse response){
+        // 1) REFRESH_TOKEN 쿠키에서 값 꺼내기
+        String refreshToken = jwtProvider.resolveRefreshToken(request, JWT_REFRESH_TOKEN_COOKIE_NAME);
+        if (refreshToken == null) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(BaseResponse.onFailure("AUTH002", "리프레시 토큰이 없습니다", null));
+        }
+
+        // 2) 리프레시 토큰 유효성 검증
+        if (!jwtProvider.validateRefreshToken(refreshToken)) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(BaseResponse.onFailure("AUTH003", "리프레시 토큰이 유효하지 않습니다", null));
+        }
+
+        // 3) 토큰에서 Authentication 정보 추출
+        Authentication authentication = jwtProvider.getAuthentication(refreshToken);
+
+        // 4) 새 Access Token 생성
+        String newAccessToken = jwtProvider.createAccessToken(authentication);
+
+        // 5) HttpOnly + Secure 쿠키로 세팅
+        ResponseCookie cookie = ResponseCookie.from(JWT_ACCESS_TOKEN_COOKIE_NAME, newAccessToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(ACCESS_TOKEN_EXPIRE_TIME)
+                .sameSite("Strict")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.ok(BaseResponse.onSuccess("token 발급 완료"));
+    }
 }

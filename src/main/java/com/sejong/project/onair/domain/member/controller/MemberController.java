@@ -3,14 +3,19 @@ package com.sejong.project.onair.domain.member.controller;
 import com.sejong.project.onair.domain.member.dto.MemberRequest;
 import com.sejong.project.onair.domain.member.dto.MemberResponse;
 import com.sejong.project.onair.domain.member.service.MemberService;
+import com.sejong.project.onair.global.exception.BaseResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,6 +36,15 @@ public class MemberController {
     MemberResponse.LoginResponseDto googleLoginByToken(HttpServletResponse response){
         log.info("enter google controller");
         return memberService.testLogin(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<BaseResponse<?>> refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+        log.info("come refresh");
+        return memberService.updateRefreshToken(request,response);
     }
 
 }

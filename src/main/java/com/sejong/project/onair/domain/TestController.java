@@ -1,5 +1,6 @@
 package com.sejong.project.onair.domain;
 
+import com.sejong.project.onair.global.exception.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,5 +18,10 @@ public class TestController {
     @GetMapping("/health")
     public ResponseEntity<String> health(){
         return ResponseEntity.ok("OK");
+    }
+
+    @GetMapping("/checkAuth")
+    public BaseResponse<?> checkAuth(){
+        return BaseResponse.onSuccess("success");
     }
 }

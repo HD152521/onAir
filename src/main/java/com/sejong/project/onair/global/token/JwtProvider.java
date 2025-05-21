@@ -8,19 +8,16 @@ import com.sejong.project.onair.global.exception.BaseException;
 import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import com.sejong.project.onair.global.token.vo.AccessToken;
 import com.sejong.project.onair.global.token.vo.RefreshToken;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -28,9 +25,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtParser;
+import org.springframework.util.StringUtils;
 
-import static com.sejong.project.onair.global.token.JwtProperties.ACCESS_TOKEN_EXPIRE_TIME;
-import static com.sejong.project.onair.global.token.JwtProperties.REFRESH_TOKEN_EXPIRE_TIME;
+import static com.sejong.project.onair.global.token.JwtProperties.*;
+import static com.sejong.project.onair.global.token.JwtProperties.JWT_ACCESS_TOKEN_TYPE;
 
 
 @Getter
@@ -41,6 +41,8 @@ public class JwtProvider implements TokenProvider {
     private final SecretKey SECRET_KEY;
     private final String ISS = "github.com/SophistRing";
     private final MemberDetailsService memberDetailsService;
+    private final JwtParser jwtParser;
+
 
     public JwtProvider(
             @Value("${jwt.secret}") String SECRET_KEY,
@@ -50,7 +52,13 @@ public class JwtProvider implements TokenProvider {
                 .decode(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         this.SECRET_KEY = new SecretKeySpec(keyBytes, "HmacSHA256");
         this.memberDetailsService = memberDetailsService;
+        //fixme jwtParser수정하기
+        this.jwtParser = Jwts
+                .parser()
+                .setSigningKey(this.SECRET_KEY)
+                .build();
     }
+
 
     public AccessToken generateAccessToken(Member member) {
         if (member.getEmail() == null || member.getEmail().isBlank()) {
@@ -131,21 +139,46 @@ public class JwtProvider implements TokenProvider {
     }
 
     public boolean validateToken(String accessToken) {
-        if (accessToken == null) {
-            return false;
-        }
+        log.info("validToken 진입");
         try {
-            Jws<Claims> claims = Jwts.parser()
-                    .verifyWith(SECRET_KEY)
-                    .build()
-                    .parseSignedClaims(accessToken);
-            return claims.getPayload()
-                    .getExpiration()
-                    .after(new Date());
-        }
-        catch (Exception e) {
+            // 서명·만료 검증을 동시에 수행
+            Jws<Claims> jws = jwtParser.parseClaimsJws(accessToken);
+
+            Date expiration = jws.getBody().getExpiration();
+            log.info("validToken: {}", expiration.after(new Date()));
+            log.info("expiration: {}", expiration);
+
+            return expiration.after(new Date());
+        } catch (ExpiredJwtException e) {
+            log.warn("토큰 만료", e);
+            return false;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.warn("토큰 검증 오류", e);
             return false;
         }
+//        if (accessToken == null) {
+//            return false;
+//        }
+//        log.info("validToken 진입(2)");
+//        try {
+//            Jws<Claims> claims = Jwts.parser()
+//                    .verifyWith(SECRET_KEY)
+//                    .build()
+//                    .parseSignedClaims(accessToken);
+//
+//            log.info("validToken:{}",claims.getPayload()
+//                    .getExpiration()
+//                    .after(new Date()));
+//            log.info("valid(2):{}",claims.getPayload()
+//                    .getExpiration());
+//
+//            return claims.getPayload()
+//                    .getExpiration()
+//                    .after(new Date());
+//        }
+//        catch (Exception e) {
+//            return false;
+//        }
     }
 
     public Authentication getAuthentication(String token){
@@ -157,6 +190,72 @@ public class JwtProvider implements TokenProvider {
                 null,
                 userDetails.getAuthorities());
         return authentication;
+    }
+
+    public boolean validateRefreshToken(String token) {
+        try {
+            jwtParser.parseClaimsJws(token);  // 만료나 서명 오류 시 예외 발생
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public String createAccessToken(Authentication auth) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME * 1000);
+        return Jwts.builder()
+                .setSubject(auth.getName())
+                .claim("roles", auth.getAuthorities())
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(SECRET_KEY)      // Keys.hmacShaKeyFor 방식으로 세팅된 키
+                .compact();
+    }
+
+    public String resolveRefreshToken(HttpServletRequest request, String name){
+        if (request.getCookies() == null) return null;
+        for (Cookie cookie : request.getCookies()) {
+            log.info("cookie종류 보기 : {}",cookie.getName());
+            if (name.equals(cookie.getName())) {
+                log.info("refreshToken:{}",cookie.getValue());
+                return cookie.getValue();
+            }
+        }
+        log.warn("refresh토큰 못찾음");
+        return null;
+    }
+
+    public String resolvAccesseToken(HttpServletRequest request) {
+
+        // 쿠키에서 꺼내기
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("ACCESS_TOKEN".equals(cookie.getName())) {
+                    log.info("cookieValue:{}",cookie.getValue());
+                    return cookie.getValue();
+                }
+            }
+        }
+        // 헤더에서 꺼내기
+        String bearer = request.getHeader(JWT_ACCESS_TOKEN_HEADER_NAME);
+        if (StringUtils.hasText(bearer) && bearer.startsWith(JWT_ACCESS_TOKEN_TYPE)) {
+            log.info("Header:{}",bearer);
+            return bearer.substring(7);
+        }
+        return null;
+
+
+        //note 밑으로 원래코드
+//        String authorization = httpServletRequest.getHeader("Authorization");
+//        if (authorization == null) {
+//            throw new BaseException(ErrorCode.EMPTY_TOKEN_PROVIDED);
+//        }
+//        if (authorization.startsWith("Bearer ")) { // Bearer 기반 토큰 인증을 함
+//            return authorization.substring(7);
+//        }
+//
+//        throw new BaseException(ErrorCode.EMPTY_TOKEN_PROVIDED);
     }
 }
 

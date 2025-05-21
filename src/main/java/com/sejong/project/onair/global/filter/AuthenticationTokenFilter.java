@@ -1,8 +1,10 @@
 package com.sejong.project.onair.global.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sejong.project.onair.domain.member.dto.MemberDetails;
 import com.sejong.project.onair.domain.member.service.MemberDetailsService;
 import com.sejong.project.onair.global.exception.BaseException;
+import com.sejong.project.onair.global.exception.BaseResponse;
 import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import com.sejong.project.onair.global.token.JwtProvider;
 import jakarta.servlet.FilterChain;
@@ -24,6 +26,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
+import static com.sejong.project.onair.global.token.JwtProperties.JWT_ACCESS_TOKEN_HEADER_NAME;
+import static com.sejong.project.onair.global.token.JwtProperties.JWT_ACCESS_TOKEN_TYPE;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -61,19 +66,21 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
         log.info(request.getRequestURI());
 
         log.info("멤버 인증 시작!!");
-        String token = resolveToken(request);
+        String token = jwtProvider.resolvAccesseToken(request);
+        log.info("최종 token:{}",token);
+
         if (token == null) {
-            sendErrorResponse(response, "토큰이 없습니다");
+            sendErrorResponse(response, ErrorCode.EMPTY_TOKEN_PROVIDED);
             return;
         }
 
         try {
             // 3) 토큰 유효성 검증 (만료도 여기서 체크됨)
             if (!jwtProvider.validateToken(token)) {
-                sendErrorResponse(response, "만료입니다");
+                log.info("만료임");
+                sendErrorResponse(response, ErrorCode.EXPIRED_ACCESS_TOKEN);
                 return;
             }
-
 
             //note security context 이번만 사용 Stateless방식
             Authentication authentication = jwtProvider.getAuthentication(token);
@@ -89,47 +96,25 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
 
         } catch (io.jsonwebtoken.ExpiredJwtException ex) {
             // 만료 예외를 별도로 잡아서도 처리 가능
-            sendErrorResponse(response, "만료입니다");
+            sendErrorResponse(response, ErrorCode.EXPIRED_ACCESS_TOKEN);
         }
 
 
     }
 
-    private String resolveToken(HttpServletRequest httpServletRequest) {
-        // 쿠키에서 꺼내기
-        if (httpServletRequest.getCookies() != null) {
-            for (Cookie cookie : httpServletRequest.getCookies()) {
-                if ("ACCESS_TOKEN".equals(cookie.getName())) {
-                    log.info("cookieValue:{}",cookie.getValue());
-                    return cookie.getValue();
-                }
-            }
-        }
-        // 헤더에서 꺼내기
-        String bearer = httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION);
-        if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
-            log.info("Header:{}",bearer);
-            return bearer.substring(7);
-        }
-        return null;
 
-
-        //note 밑으로 원래코드
-//        String authorization = httpServletRequest.getHeader("Authorization");
-//        if (authorization == null) {
-//            throw new BaseException(ErrorCode.EMPTY_TOKEN_PROVIDED);
-//        }
-//        if (authorization.startsWith("Bearer ")) { // Bearer 기반 토큰 인증을 함
-//            return authorization.substring(7);
-//        }
-//
-//        throw new BaseException(ErrorCode.EMPTY_TOKEN_PROVIDED);
-    }
-
-
-    private void sendErrorResponse(HttpServletResponse response, String message) throws IOException {
+    private void sendErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+        // 1) HTTP 상태 및 인코딩/타입 설정
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write("{\"message\":\"" + message + "\"}");
+        response.setContentType("application/json; charset=UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        // 2) BaseResponse 형식으로 에러 객체 생성
+        BaseResponse<Object> errorBody = BaseResponse.onFailure(errorCode.getCode(), errorCode.getMessage(), null);
+
+        // 3) JSON 직렬화 후 쓰기
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(errorBody);
+        response.getWriter().write(json);
     }
 }
