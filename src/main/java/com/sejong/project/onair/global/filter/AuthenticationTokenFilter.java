@@ -53,7 +53,10 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
                 "/swagger",
                 "/observatory",
                 "/test",
-                "/health"
+                "/health",
+                "/api-test",
+                "/swagger-ui",
+                "/v3"
         };
 
         for (String allowed : WHITELIST_PATHS) {
