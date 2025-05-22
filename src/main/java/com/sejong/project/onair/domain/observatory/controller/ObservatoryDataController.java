@@ -25,20 +25,6 @@ public class ObservatoryDataController {
 
     private final ObservatoryDataService observatoryDataService;
 
-
-    //Note 관측데이터 가져오기
-//    @GetMapping("/data/get/day/range")
-//    public BaseResponse<?> getDatafromRangeDate(@RequestBody ObservatoryDataRequest.DayRangeDto request){
-//        log.info("[Controller] {}부터{}까지 {}지역",request.startDate(),request.endDate(),request.nation());
-//        return BaseResponse.onSuccess(observatoryDataService.getObjectDatasFromDBDate(request));
-//    }
-//
-//    @GetMapping("/data/get/hour/range")
-//    public BaseResponse<?> getDatafromRangeDate(@RequestBody ObservatoryDataRequest.HourRangeDto request){
-//        log.info("[Controller] {}부터{}까지 {}지역",request.startDate(),request.endDate(),request.nation());
-//        return BaseResponse.onSuccess(observatoryDataService.getObjectDatasFromDBDate(request));
-//    }
-
     @GetMapping("/data/get/day/range")
     public BaseResponse<?> getDataFromDayRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -48,9 +34,7 @@ public class ObservatoryDataController {
         log.info("[Controller] {}부터 {}까지 {} 지역", startDate, endDate, nation);
         // DTO 로 묶어서 서비스 호출
         var dto = new ObservatoryDataRequest.DayRangeDto(startDate, endDate, nation);
-        return BaseResponse.onSuccess(
-                observatoryDataService.getObjectDatasFromDBDate(dto)
-        );
+        return BaseResponse.onSuccess(observatoryDataService.getObjectDatasFromDBDate(dto));
     }
 
     @GetMapping("/data/get/hour/range")
@@ -63,15 +47,12 @@ public class ObservatoryDataController {
     ) {
         log.info("[Controller] {}부터 {}까지 {} 지역", startDateTime, endDateTime, nation);
         var dto = new ObservatoryDataRequest.HourRangeDto(startDateTime, endDateTime, nation);
-        return BaseResponse.onSuccess(
-                observatoryDataService.getObjectDatasFromDBDate(dto)
-        );
+        return BaseResponse.onSuccess(observatoryDataService.getObjectDatasFromDBDate(dto));
     }
 
 
     @GetMapping("/data/get/all")
     public BaseResponse<?> getDataAllOfObservatory(){
-        //todo 모든거 하나씩 가져오기 from repo
         return BaseResponse.onSuccess(observatoryDataService.getNowDataAllFromDB());
     }
 

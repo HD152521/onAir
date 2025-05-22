@@ -54,7 +54,6 @@ public class ObservatoryDataService {
         3. 1년 지나면 데이터들 옮기는거
      */
 
-
     public String getStringDatasFromAirkorea(ObservatoryDataRequest.nationDto request){
         return airKoreaApiService.getDatabyObservatory(request.nation());
     }
@@ -75,6 +74,7 @@ public class ObservatoryDataService {
             observatoryDataRepository.saveAll(datas);
         }catch (Exception e){
             log.warn(e.getMessage());
+            throw new BaseException(ErrorCode.DATA_SAVE_ERROR);
         }
         return datas;
     }
@@ -147,7 +147,6 @@ public class ObservatoryDataService {
         int currentHour = -10;
         log.info("[Service] update서비스 들어옴 시간:{} 시간:{}",currentHour,lastHour);
         List<ObservatoryData> saveList = new ArrayList<>();
-
         if(currentHour != lastHour){
             log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 시작");
 
@@ -169,7 +168,11 @@ public class ObservatoryDataService {
                     failedList.add(stationName);
                 }
             }
-            observatoryDataRepository.saveAll(saveList);
+            try{
+                observatoryDataRepository.saveAll(saveList);
+            }catch (Exception e){
+                throw new BaseException(ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
+            }
             lastHour=LocalDateTime.now().getHour();
             log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 완료!");
             log.info("[Service] currentHour : {}, lastHour:{}",currentHour,lastHour);
@@ -199,21 +202,24 @@ public class ObservatoryDataService {
     public List<ObservatoryDataResponse.FlagFilterDto> getObjectDatasFromDBDate(ObservatoryDataRequest.HourRangeDto request){
         List<ObservatoryData> datas = new ArrayList<>();
         List<ObservatoryDataResponse.FlagFilterDto> response = new ArrayList<>();
-        try {
-             datas = observatoryDataRepository.
+
+        try{
+            datas = observatoryDataRepository.
                     findByStationNameAndDataTimeBetweenOrderByDataTimeAsc(
                             request.nation(),
                             request.startDate(),
                             request.endDate());
-            if(datas.isEmpty()) {
-                log.warn("[Service] 해당 기간에 데이터가 없습니다.");
-                throw new BaseException(ErrorCode.DATA_NOT_FOUND);
-                //todo 없을 경우 에어 코리아에서 가져오기
-            }
-            response = ObservatoryDataResponse.FlagFilterDto.toAll(datas);
-        }catch (Exception e){
-            log.warn(e.getMessage());
+        }catch(Exception e){
+            throw new BaseException(ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
         }
+
+        if(datas.isEmpty()) {
+            log.warn("[Service] 해당 기간에 데이터가 없습니다.");
+            throw new BaseException(ErrorCode.DATA_NOT_FOUND);
+            //todo 없을 경우 에어 코리아에서 가져오기
+        }
+        response = ObservatoryDataResponse.FlagFilterDto.toAll(datas);
+
         return response;
     }
 
@@ -242,6 +248,12 @@ public class ObservatoryDataService {
         for(ObservatoryDataResponse.FlagFilterDto dto: dtos){
             if(dto.dataTime().getHour()==nowHour) response.add(dto);
         }
+
+        if(response.isEmpty()){
+            log.warn("현재 데이터 가져오는데 실패함.");
+            throw new BaseException(ErrorCode.OBSERVATORY_DATA_NOT_FOUND);
+        }
+
         return response;
     }
 

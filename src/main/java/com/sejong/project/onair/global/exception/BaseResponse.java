@@ -3,6 +3,7 @@ package com.sejong.project.onair.global.exception;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import com.sejong.project.onair.global.exception.codes.SuccessCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,4 +37,9 @@ public class BaseResponse<T> {
     public static <T> BaseResponse<T> onFailure(String code, String message, T data) {
         return new BaseResponse<>(false, code, message, data);
     }
+
+    public static <T> BaseResponse<T> onFailure(ErrorCode errorCode, T data) {
+        return new BaseResponse<>(false, errorCode.getCode(), errorCode.getMessage(), data);
+    }
+
 }

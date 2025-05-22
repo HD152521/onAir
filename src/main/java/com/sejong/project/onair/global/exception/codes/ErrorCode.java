@@ -116,8 +116,12 @@ public enum ErrorCode implements BaseCode {
     AIRKOREA_API_ALREADY_UPDATE(HttpStatus.BAD_REQUEST, "API-0000", "해당 데이터는 이미 업데이트 함."),
 
     DATA_NOT_FOUND(HttpStatus.BAD_REQUEST, "DATA-0000", "해당 데이터는 존재하지 않습니다."),
+    DATA_SAVE_ERROR(HttpStatus.BAD_REQUEST, "DATA-0001", "데이터들을 저장하는데 실패했습니다"),
 
     OBSERVATORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "OBSERVATORY-0000", "해당 관측소는 존재하지 않습니다."),
+
+    OBSERVATORY_DATA_SAVE_ERROR(HttpStatus.BAD_REQUEST, "OBSERVATORY_DATA-0000", "해당 관측 데이터를 저장하는데 실패했습니다."),
+    OBSERVATORY_DATA_NOT_FOUND(HttpStatus.BAD_REQUEST, "OBSERVATORY_DATA-0001", "해당 관측 데이터를 찾을 수 없습니다."),
 
     // 5xx : server error
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER-0000", "서버 에러");
