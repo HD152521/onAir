@@ -74,7 +74,8 @@ public class ObservatoryDataService {
             observatoryDataRepository.saveAll(datas);
         }catch (Exception e){
             log.warn(e.getMessage());
-            throw new BaseException(ErrorCode.DATA_SAVE_ERROR);
+            log.warn("{}",ErrorCode.DATA_SAVE_ERROR);
+//            throw new BaseException(ErrorCode.DATA_SAVE_ERROR);
         }
         return datas;
     }
@@ -171,7 +172,8 @@ public class ObservatoryDataService {
             try{
                 observatoryDataRepository.saveAll(saveList);
             }catch (Exception e){
-                throw new BaseException(ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
+//                throw new BaseException(ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
+                log.warn("{}",ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
             }
             lastHour=LocalDateTime.now().getHour();
             log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 완료!");
@@ -210,12 +212,12 @@ public class ObservatoryDataService {
                             request.startDate(),
                             request.endDate());
         }catch(Exception e){
-            throw new BaseException(ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
+            log.warn("datas가져오는 실패함");
         }
 
         if(datas.isEmpty()) {
             log.warn("[Service] 해당 기간에 데이터가 없습니다.");
-            throw new BaseException(ErrorCode.DATA_NOT_FOUND);
+//            throw new BaseException(ErrorCode.DATA_NOT_FOUND);
             //todo 없을 경우 에어 코리아에서 가져오기
         }
         response = ObservatoryDataResponse.FlagFilterDto.toAll(datas);
@@ -251,7 +253,7 @@ public class ObservatoryDataService {
 
         if(response.isEmpty()){
             log.warn("현재 데이터 가져오는데 실패함.");
-            throw new BaseException(ErrorCode.OBSERVATORY_DATA_NOT_FOUND);
+//            throw new BaseException(ErrorCode.OBSERVATORY_DATA_NOT_FOUND);
         }
 
         return response;
@@ -364,7 +366,7 @@ public class ObservatoryDataService {
             checkAlreadySave(observatoryData);
             observatoryService.checkObservatory(observatoryData);
         }catch (Exception e){
-            throw e;
+            log.warn(e.getMessage());
         }
     }
 
@@ -408,7 +410,6 @@ public class ObservatoryDataService {
         ObservatoryData lastObservatoryData = observatoryDataRepository.findTopByStationNameOrderByDataTimeDesc(station);
         if(lastObservatoryData == null) return;
         if(observatoryData.getDataTime().equals(lastObservatoryData.getDataTime())) throw new BaseException(ErrorCode.AIRKOREA_API_ALREADY_UPDATE);
-
     }
 
     public void checkAirkoreaUpdate(ObservatoryData observatoryData){
