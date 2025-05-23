@@ -19,8 +19,8 @@ public class SwaggerConfig {
 
     private Info apiInfo() {
         return new Info()
-                .title("SophistRing") // API의 제목
-                .description("1:1 토론 매칭 웹 프로젝트") // API에 대한 설명
+                .title("onAir") // API의 제목
+                .description("공기 청정기 프로젝트") // API에 대한 설명
                 .version("1.0.0"); // API의 버전
     }
 }

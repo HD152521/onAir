@@ -1,0 +1,38 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: onAir
+      MYSQL_USER: onAir
+      MYSQL_PASSWORD: onAir123!@#
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+
+  spring:
+#    build:
+#      context: ./../../../
+#      dockerfile: Dockerfile
+    #추가본
+    image: yong6/onair:latest
+
+    container_name: spring-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    env_file:
+      - db.env
+    networks:
+      - backend
+volumes:
+  mysql-data:
+
+networks:
+  backend:
+
