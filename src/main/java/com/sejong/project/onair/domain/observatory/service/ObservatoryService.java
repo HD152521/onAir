@@ -51,7 +51,7 @@ public class ObservatoryService {
         List<Observatory> observatories = observatoryRepository.findAll();
         if(observatories.isEmpty()){
             log.warn("[Service] 모든 observatory 가져오는데 빈 값임");
-            throw new BaseException(ErrorCode.OBSERVATORY_NOT_FOUND);
+//            throw new BaseException(ErrorCode.OBSERVATORY_NOT_FOUND);
         }
         log.info("[Service] 모든 observatory데이터 가져옴.");
         return observatories;
@@ -63,7 +63,8 @@ public class ObservatoryService {
         try {
             observatoryRepository.save(observatory);
         }catch(Exception e){
-            throw new BaseException(ErrorCode.DATA_SAVE_ERROR);
+//            throw new BaseException(ErrorCode.DATA_SAVE_ERROR);
+            log.warn("{}",ErrorCode.DATA_SAVE_ERROR);
         }
         return observatory;
     }
@@ -165,7 +166,8 @@ public class ObservatoryService {
             }
         } catch (IOException e) {
             log.warn("[Service] CSV파일 읽기 실패");
-            throw new BaseException(ErrorCode.FILE_READ_ERROR);
+            log.warn("{}",ErrorCode.FILE_READ_ERROR);
+//            throw new BaseException(ErrorCode.FILE_READ_ERROR);
         }
         return observatories;
     }
@@ -177,7 +179,8 @@ public class ObservatoryService {
             observatoryRepository.saveAll(observatories);
         }catch (Exception e){
             log.warn("[Service] csv데이터 mysql저장하는데 오류 발생");
-            throw new BaseException(ErrorCode.DATA_SAVE_ERROR);
+            log.warn("{}",ErrorCode.DATA_SAVE_ERROR);
+//            throw new BaseException(ErrorCode.DATA_SAVE_ERROR);
         }
         return observatories;
     }
