@@ -135,4 +135,11 @@ public class Preddata {
 
     @Column(name = "최근접기상관측소명")
     private String nearestObservatoryName;
+
+    @Column(name = "대기측정소위도")
+    private double dmX;
+
+    @Column(name = "대기측정소경도")
+    private double dmY;
+
 }

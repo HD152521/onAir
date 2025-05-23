@@ -18,6 +18,8 @@ import com.sejong.project.onair.global.entity.NullOnInvalidIntegerDeserializer;
 import com.sejong.project.onair.global.exception.BaseException;
 import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import io.swagger.v3.core.util.Json;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +32,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
+
+import static org.apache.commons.math3.util.Precision.round;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +46,10 @@ public class ObservatoryDataService {
     private final AirKoreaApiService airKoreaApiService;
     private final ObservatoryService observatoryService;
     private final ObservatoryDataRepository observatoryDataRepository;
+
+    private static final int BATCH_SIZE = 100;
+    @PersistenceContext
+    private final EntityManager em;
 
 
     private final List<String> failedList = new ArrayList<>();
@@ -80,6 +87,8 @@ public class ObservatoryDataService {
 //            throw new BaseException(ErrorCode.DATA_SAVE_ERROR);
         }
         return datas;
+
+
     }
 
     public ObservatoryData getLastObjectDataFromAirkorea(String nation){
@@ -106,26 +115,45 @@ public class ObservatoryDataService {
     }
 
     public List<ObservatoryData> saveTodayData(){
-        List<List<ObservatoryData>> datas = getTodayObjectDataFromAirkorea();
-        List<ObservatoryData> failedList = new ArrayList<>();
-        List<ObservatoryData> savedList = new ArrayList<>();
-        for(List<ObservatoryData> obData : datas){
-            for(ObservatoryData data: obData){
-                try{
-                    checkBeforeSave(data);
-                    savedList.add(data);
-                }catch(Exception e){
-                    failedList.add(data);
-                    log.warn("failed 관측소 : {}",data.getStationName());
-                }
-            }
-        }
-        try{
-            observatoryDataRepository.saveAll(savedList);
-        }catch(Exception e){
-            log.warn("관측소 데이터 저장하는데 오류 발생함");
-        }
-        return savedList;
+        List<ObservatoryData> result = new ArrayList<>();
+
+        // 1. 모든 관측소를 스트림으로 순회
+        observatoryService.getAllObservatory().stream()
+                // 2. 각 관측소별 API 호출 → 데이터 리스트 스트림으로 변환
+                .flatMap(obs -> {
+                    try {
+                        return getObjectDatasFromAirkorea(new ObservatoryDataRequest.nationDto(obs.getStationName()))
+                                .stream();
+                    } catch (Exception ex) {
+                        log.warn("[{}] 관측소 데이터 조회 실패: {}", obs.getStationName(), ex.getMessage());
+                        return Stream.empty();
+                    }
+                })
+                // 3. 유효성 검사 통과한 데이터만
+                .filter(data -> {
+                    try {
+                        checkBeforeSave(data);
+                        return true;
+                    } catch (Exception ex) {
+                        log.warn("검증 실패 [{}]: {}", data.getStationName(), ex.getMessage());
+                        return false;
+                    }
+                })
+                // 4. 배치 저장
+                .forEachOrdered(data -> {
+                    result.add(data);
+                    em.persist(data);  // 영속화
+                    if (result.size() % BATCH_SIZE == 0) {
+                        em.flush();
+                        em.clear();  // 1차 캐시 비우기
+                    }
+                });
+
+        // 남은 건들 flush
+        em.flush();
+        em.clear();
+
+        return result;
     }
 
 
@@ -285,43 +313,51 @@ public class ObservatoryDataService {
     }
 
     @Transactional
-    public List<ObservatoryDataResponse.FlagFilterDto> saveDummyData(){
+    public List<ObservatoryDataResponse.FlagFilterDto> saveDummyData(LocalDateTime startDateTime, LocalDateTime endDateTime){
         List<Observatory> observatories = observatoryService.getAllObservatory();
         List<ObservatoryData> dataList = new ArrayList<>();
 
-        LocalDateTime start = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        ThreadLocalRandom r = ThreadLocalRandom.current();
 
         log.info("[Service] dummy data 주입중...");
-        for (Observatory ob : observatories) {
-            String dateString = start.format(formatter);
+        for (LocalDateTime dt = startDateTime; !dt.isAfter(endDateTime); dt = dt.plusHours(1)) {
+            for (Observatory ob : observatories) {
+                String dateString = dt.format(formatter);
+                ObservatoryData data = ObservatoryData.builder()
+                        .so2Grade(r.nextInt(1, 5))
+                        .coGrade(r.nextInt(1, 5))
+                        .no2Grade(r.nextInt(1, 5))
+                        .o3Grade(r.nextInt(1, 5))
+                        .pm10Grade(r.nextInt(1, 5))
+                        .pm25Grade(r.nextInt(1, 5))
 
-            ObservatoryData data = ObservatoryData.builder()
-                    .so2Grade(1)
-                    .coFlag(null)
-                    .khaiValue(50)
-                    .so2Value(0.005)
-                    .coValue(0.4)
-                    .pm25Flag(null)
-                    .pm10Flag(null)
-                    .pm10Value(30)
-                    .o3Grade(2)
-                    .khaiGrade(3)
-                    .pm25Value(20)
-                    .no2Flag(null)
-                    .no2Grade(1)
-                    .o3Flag(null)
-                    .pm25Grade(2)
-                    .so2Flag(null)
-                    .dataTimeString(dateString)
-                    .coGrade(1)
-                    .no2Value(0.02)
-                    .pm10Grade(2)
-                    .o3Value(0.03)
-                    .stationName(ob.getStationName())
-                    .build();
-            data.changeDate();
-            dataList.add(data);
+                        // 수치 값: 적절한 범위 설정 (예: ppm 단위, μg/m³ 단위 등)
+                        .so2Value(round(r.nextDouble(0.0, 0.1), 3))       // 0.000 ~ 0.099 ppm
+                        .coValue(round(r.nextDouble(0.0, 2.0), 2))        // 0.00  ~ 1.99 ppm
+                        .no2Value(round(r.nextDouble(0.0, 0.2), 3))       // 0.000 ~ 0.199 ppm
+                        .o3Value(round(r.nextDouble(0.0, 0.2), 3))        // 0.000 ~ 0.199 ppm
+                        .pm10Value(r.nextInt(0, 151))                    // 0 ~ 150 µg/m³
+                        .pm25Value(r.nextInt(0, 76))                     // 0 ~ 75  µg/m³
+
+                        // 종합 대기지수
+                        .khaiValue(r.nextInt(0, 601))                    // 0 ~ 600
+                        .khaiGrade(r.nextInt(1, 5))                      // 1 ~ 4
+
+                        // Flag 필드는 측정 이상 여부나 null 허용 등으로
+                        .so2Flag(null)
+                        .coFlag(null)
+                        .no2Flag(null)
+                        .o3Flag(null)
+                        .pm10Flag(null)
+                        .pm25Flag(null)
+
+                        .dataTimeString(dateString)
+                        .stationName(ob.getStationName())
+                        .build();
+                data.changeDate();
+                dataList.add(data);
+            }
         }
         System.out.println("observatories.size = " + observatories.size());
         System.out.println("dataList.size = " + dataList.size());
@@ -354,6 +390,7 @@ public class ObservatoryDataService {
 
 
             log.info("[Service] parseObservatoryDataList mapper");
+            log.info("json:{}",json.toString());
 
             JsonNode root = mapper.readTree(json);
             //note json테스트 안하면 json빼기
@@ -385,6 +422,7 @@ public class ObservatoryDataService {
         }
         return list;
     }
+
     public void checkBeforeSave(ObservatoryData observatoryData){
         try{
             checkAirkoreaUpdate(observatoryData);

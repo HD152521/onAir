@@ -1,13 +1,15 @@
 package com.sejong.project.onair.domain.preddata.controller;
 
-import com.sejong.project.onair.domain.preddata.dto.PreddataResponseDto;
+import com.sejong.project.onair.domain.preddata.dto.PreddataResponse;
 import com.sejong.project.onair.domain.preddata.model.Preddata;
 import com.sejong.project.onair.domain.preddata.service.PreddataService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -21,5 +23,21 @@ public class PreddataController {
     public List<Preddata> getAllPreddata() {
         return preddataService.getAllPreddata();
     }
+
+    @GetMapping("/get")
+    public List<PreddataResponse.SpecificDataDto> getSpecificData(
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime,
+            @RequestParam String airType
+    ){
+        return preddataService.getSpecificData(dateTime, airType);
+    }
+
+    @PostMapping("/save/file")
+    public List<Preddata> savePreddataByFile(){
+        return preddataService.savePreddataByFile();
+
+    }
+
 
 }
