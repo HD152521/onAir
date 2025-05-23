@@ -2,11 +2,13 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: onAir
-      MYSQL_USER: onAir
-      MYSQL_PASSWORD: onAir123!@#
+    env_file:
+      - docker_mysql.env
+#    environment:
+#      MYSQL_ROOT_PASSWORD: 1234
+#      MYSQL_DATABASE: onAir
+#      MYSQL_USER: onAir
+#      MYSQL_PASSWORD: onAir123!@#
     ports:
       - "3307:3306"
     volumes:
@@ -27,7 +29,7 @@ services:
     depends_on:
       - mysql
     env_file:
-      - db.env
+      - docker_spring.env
     networks:
       - backend
 volumes:

@@ -1,12 +1,13 @@
 spring:
+  config:
+    import: optional:dotenv:./onAir.env
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://mysql:3307/onAir?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
-#    username: onAir
-#    password: onAir123!@#
-    url: jdbc:mysql://localhost:3306/onAir?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
-    username: onAir
-    password: onAir123!@#
+#    url: ${SERVER_MYSQL_URL}
+    url: ${LOCAL_MYSQL_URL}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -24,12 +25,12 @@ spring:
       client:
         registration:
           google:
-            client-id: 1070974475846-giv5891sdrqs0c825ecrfb6vumacdnd9.apps.googleusercontent.com
-            client-secret: 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
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope:
               - email
               - profile
-            redirect-uri: http://localhost:5173/loadingAuth
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
 
 springdoc:
   swagger-ui:
@@ -39,7 +40,7 @@ springdoc:
     operations-sorter: method  # delete - get - patch - post - put ??? ??, alpha? ???? ??? ??? ?? ??
 
 jwt:
-  secret: ZGZsbTJwM2ttZndlb2lmbjEzOTRnbnVxZWYxMjM1Zmdhc2RmZzQ0NHdkZjM0YXNkZjhhc2RmOTM0ZA==
+  secret: ${JWT_SECRET}
 
 server:
   port: ${PORT:8080}
