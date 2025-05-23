@@ -14,7 +14,7 @@ spring:
       minimum-idle: 5
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate.jdbc.batch_size: 100

@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +17,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE file_data SET is_deleted = true; deleted_at = now() where id = ?")
+@SQLRestriction("is_deleted is FALSE")
 public class CompWeather extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

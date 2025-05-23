@@ -3,6 +3,8 @@ package com.sejong.project.onair.domain.preddata.model;
 import com.sejong.project.onair.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +15,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE pred_air SET is_deleted = true; deleted_at = now() where id = ?")
+@SQLRestriction("is_deleted is FALSE")
 public class Preddata extends BaseEntity {
 
     /** 기본 키(PK)가 없다면, 측정시간을 복합키나 단일키로 쓸 수도 있습니다. */
