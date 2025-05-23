@@ -57,20 +57,25 @@ public class ObservatoryDataController {
     }
 
     @PostMapping("/data/update/all")
-    public BaseResponse<?> updateAllofObservatory(){
+    public BaseResponse<?> updateAllofObservatory() {
         log.info("[Controller] upadte AllofData...");
         observatoryDataService.updateObservatoryData();
         return BaseResponse.onSuccess("Success");
     }
 
     @PostMapping("/data/save/json")
-    public BaseResponse<?> saveDataAsJson(@RequestBody String json,String nation){
+    public BaseResponse<?> saveDataAsJson(@RequestBody String json,String nation) {
         return BaseResponse.onSuccess(observatoryDataService.saveObjectDataFromJson(json,nation));
     }
 
     @PostMapping("/data/dummy")
-    public BaseResponse<?> saveDummyData(){
-        return BaseResponse.onSuccess(observatoryDataService.saveDummyData());
+    public BaseResponse<?> saveDummyData(
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime
+    ){
+        return BaseResponse.onSuccess(observatoryDataService.saveDummyData(startDateTime,endDateTime));
     }
 
 }

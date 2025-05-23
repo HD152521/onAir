@@ -4,15 +4,23 @@ package com.sejong.project.onair.domain.observatory.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sejong.project.onair.global.entity.BaseEntity;
+import com.sejong.project.onair.global.entity.NullOnInvalidDoubleDeserializer;
+import com.sejong.project.onair.global.entity.NullOnInvalidIntegerDeserializer;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 
 import java.time.format.DateTimeFormatter;
 
@@ -167,5 +175,18 @@ public class ObservatoryData extends BaseEntity {
                 ", o3Value=" + o3Value +
                 ", stationName='" + stationName + '\'' +
                 '}';
+    }
+
+    @Bean
+    public ObjectMapper observatoryObjectMapper() {
+        SimpleModule customNumbers = new SimpleModule()
+                .addDeserializer(Integer.class, new NullOnInvalidIntegerDeserializer())
+                .addDeserializer(Double.class,  new NullOnInvalidDoubleDeserializer());
+
+        return new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .registerModule(customNumbers)
+                .configure(MapperFeature.USE_ANNOTATIONS,true)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 }

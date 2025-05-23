@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -32,7 +33,7 @@ public class ObservatoryAirkoreaController {
     }
 
     @GetMapping("/getData/Object")
-    public List<ObservatoryData> getDataObject(@RequestBody ObservatoryDataRequest.nationDto request){
+    public List<ObservatoryData> getDataObject(@RequestBody ObservatoryDataRequest.nationDto request) throws IOException {
         log.info("[controller] data/get");
         return observatoryDataService.getObjectDatasFromAirkorea(request);
     }
