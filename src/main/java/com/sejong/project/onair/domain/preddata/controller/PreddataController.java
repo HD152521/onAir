@@ -1,5 +1,6 @@
 package com.sejong.project.onair.domain.preddata.controller;
 
+import com.sejong.project.onair.domain.preddata.dto.PreddataResponseDto;
 import com.sejong.project.onair.domain.preddata.model.Preddata;
 import com.sejong.project.onair.domain.preddata.service.PreddataService;
 import lombok.RequiredArgsConstructor;

@@ -62,6 +62,8 @@ public class ObservatoryDataService {
         return parseObservatoryDataList(getStringDatasFromAirkorea(request),request.nation());
     }
 
+
+
     @Transactional
     public List<ObservatoryData> saveObjectDataFromJson(String json,String nation){
         log.info("json:{}",json);
@@ -101,6 +103,29 @@ public class ObservatoryDataService {
             }
         }
         return allObservatoryData;
+    }
+
+    public List<ObservatoryData> saveTodayData(){
+        List<List<ObservatoryData>> datas = getTodayObjectDataFromAirkorea();
+        List<ObservatoryData> failedList = new ArrayList<>();
+        List<ObservatoryData> savedList = new ArrayList<>();
+        for(List<ObservatoryData> obData : datas){
+            for(ObservatoryData data: obData){
+                try{
+                    checkBeforeSave(data);
+                    savedList.add(data);
+                }catch(Exception e){
+                    failedList.add(data);
+                    log.warn("failed 관측소 : {}",data.getStationName());
+                }
+            }
+        }
+        try{
+            observatoryDataRepository.saveAll(savedList);
+        }catch(Exception e){
+            log.warn("관측소 데이터 저장하는데 오류 발생함");
+        }
+        return savedList;
     }
 
 

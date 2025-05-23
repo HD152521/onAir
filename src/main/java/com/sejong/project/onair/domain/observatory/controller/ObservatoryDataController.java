@@ -63,7 +63,7 @@ public class ObservatoryDataController {
         return BaseResponse.onSuccess("Success");
     }
 
-    @PostMapping("/data/save")
+    @PostMapping("/data/save/json")
     public BaseResponse<?> saveDataAsJson(@RequestBody String json,String nation){
         return BaseResponse.onSuccess(observatoryDataService.saveObjectDataFromJson(json,nation));
     }

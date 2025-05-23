@@ -52,7 +52,7 @@ public class SecurityConfig {
                                         "/api-test"
                                         ,"/api-test").permitAll()
                         //fixme 임시로 허용 해주는거 나중에 지우기 (test위해서임)
-                        .requestMatchers("/file/**").permitAll()
+                        .requestMatchers("/file/**","/pred/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .securityContext((securityContext) -> {

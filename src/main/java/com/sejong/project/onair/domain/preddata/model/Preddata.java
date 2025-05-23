@@ -1,15 +1,12 @@
 package com.sejong.project.onair.domain.preddata.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "테이블명")  // 실제 DB 테이블 이름으로 바꿔주세요
+@Table(name = "pred_air")  // 실제 DB 테이블 이름으로 바꿔주세요
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,6 +16,10 @@ public class Preddata {
 
     /** 기본 키(PK)가 없다면, 측정시간을 복합키나 단일키로 쓸 수도 있습니다. */
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
     @Column(name = "측정시간")
     private LocalDateTime measurementTime;
 
@@ -28,7 +29,7 @@ public class Preddata {
     @Column(name = "강수량(mm)")
     private Double precipitation;
 
-    @Column(name = "기온(℃)")
+    @Column(name = "기온(°C)")
     private Double temperature;
 
     @Column(name = "습도(%)")
@@ -37,7 +38,7 @@ public class Preddata {
     @Column(name = "시정(10m)")
     private Double visibility10m;
 
-    @Column(name = "이슬점온도(℃)")
+    @Column(name = "이슬점온도(°C)")
     private Double dewPoint;
 
     @Column(name = "일사(MJ/m2)")
@@ -58,10 +59,10 @@ public class Preddata {
     @Column(name = "증기압(hPa)")
     private Double vaporPressure;
 
-    @Column(name = "지면온도(℃)")
+    @Column(name = "지면온도(°C)")
     private Double groundTemp;
 
-    @Column(name = "최저운고(100m)")
+    @Column(name = "최저운고(100m )")
     private Double cloudBase100m;
 
     @Column(name = "풍속(m/s)")
@@ -76,7 +77,7 @@ public class Preddata {
     @Column(name = "현지기압(hPa)")
     private Double localPressure;
 
-    @Column(name = "CO(ppm)")
+    @Column(name = "CO")
     private Double co;
 
     @Column(name = "CO2(ppm)")
@@ -87,6 +88,15 @@ public class Preddata {
 
     @Column(name = "CO2_pred_flag")
     private Long co2PredFlag;
+
+    @Column(name = "CH4(ppm)")
+    private Double ch4;
+
+    @Column(name = "CH4_pred")
+    private Double ch4Pred;
+
+    @Column(name = "CH4_pred_flag")
+    private Long ch4PredFlag;
 
     @Column(name = "NO(ppm)(Avg)")
     private Double noAvg;
@@ -106,22 +116,23 @@ public class Preddata {
     @Column(name = "SO2")
     private Double so2;
 
-    // === 측정소 정보 ===
-    @Column(name = "대기측정망", columnDefinition = "text")
+// === 측정소 정보 ===
+
+    @Column(name = "대기측정망")
     private String monitoringNetwork;
 
-    @Column(name = "대기측정소명", columnDefinition = "text")
+    @Column(name = "대기측정소명")
     private String stationName;
 
-    @Column(name = "대기측정소명_협의", columnDefinition = "text")
+    @Column(name = "대기측정소명_협의체")
     private String stationNameAgreement;
 
-    @Column(name = "대기측정소주소", columnDefinition = "text")
+    @Column(name = "대기측정소주소")
     private String stationAddress;
 
     @Column(name = "대기측정소코드")
     private Long stationCode;
 
-    @Column(name = "최근접기상관측소명", columnDefinition = "text")
+    @Column(name = "최근접기상관측소명")
     private String nearestObservatoryName;
 }
