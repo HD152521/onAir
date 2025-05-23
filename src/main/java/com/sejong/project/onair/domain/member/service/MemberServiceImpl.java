@@ -113,7 +113,6 @@ public class MemberServiceImpl implements MemberService{
         AccessToken accessToken = jwtProvider.generateAccessToken(member);
         RefreshToken refreshToken = jwtProvider.generateRefreshToken(member);
         TokenResponse tokenResponse = TokenResponse.of(accessToken, refreshToken);
-
         return tokenResponse;
     }
 
