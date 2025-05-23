@@ -2,7 +2,8 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mysql
-    command: ["--local-infile=1"]
+    command:
+      - --loose-local-infile=1
     environment:
       MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: onAir
@@ -12,7 +13,6 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./custom.cnf:/etc/mysql/conf.d/custom.cnf
     networks:
       - backend
 
