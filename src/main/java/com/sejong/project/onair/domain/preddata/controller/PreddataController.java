@@ -33,11 +33,4 @@ public class PreddataController {
         return preddataService.getSpecificData(dateTime, airType);
     }
 
-    @PostMapping("/save/file")
-    public List<Preddata> savePreddataByFile(){
-        return preddataService.savePreddataByFile();
-
-    }
-
-
 }
