@@ -55,7 +55,7 @@ jobs:
     name: Deploy to Server via SSH
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
 
     steps:
       - name: SSH Deploy (docker-compose pull & up)
