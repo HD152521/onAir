@@ -65,7 +65,7 @@ jobs:
           username: ubuntu                    
           key: ${{ secrets.DEPLOY_KEY }}      
           script: |
-            cd /home/ubuntu/onAir       # 배포 디렉토리
+            cd /home/ubuntu/onAir/src/main/resources       # 배포 디렉토리
             docker-compose stop spring || true
             docker compose rm -f spring
             docker-compose pull spring
