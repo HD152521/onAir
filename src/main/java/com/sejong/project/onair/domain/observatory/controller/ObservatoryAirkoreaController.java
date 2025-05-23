@@ -61,4 +61,10 @@ public class ObservatoryAirkoreaController {
         log.info("[controller] /update/airkorea 진입 관측소 정보 업데이트");
         return observatoryService.updateObservatoryFromAirkorea();
     }
+
+    @PostMapping("/save/today/date")
+    public List<ObservatoryData> saveTodayDate(){
+        log.info("[Contorller] save today airkorea data");
+        return observatoryDataService.saveTodayData();
+    }
 }
