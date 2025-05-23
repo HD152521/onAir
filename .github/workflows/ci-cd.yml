@@ -66,7 +66,7 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}      
           script: |
             cd /home/ubuntu/onAir/src/main/resources       # 배포 디렉토리
-            docker-compose stop spring || true
-            docker compose rm -f spring
-            docker-compose pull spring
-            docker-compose up -d spring
+            docker compose stop spring || true  # 컨테이너 중지
+            docker compose rm -f spring         # 제거
+            docker compose pull spring          # 레지스트리에서 최신 이미지 가져오기
+            docker compose up -d --build spring # 이미지 빌드(또는 pull된 이미지 사용) 후 기동
