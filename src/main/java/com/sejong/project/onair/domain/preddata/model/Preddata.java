@@ -1,5 +1,6 @@
 package com.sejong.project.onair.domain.preddata.model;
 
+import com.sejong.project.onair.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Preddata {
+public class Preddata extends BaseEntity {
 
     /** 기본 키(PK)가 없다면, 측정시간을 복합키나 단일키로 쓸 수도 있습니다. */
     @Id

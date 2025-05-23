@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -68,6 +70,31 @@ public class PreddataService {
         }
 
         return response;
+    }
+
+    private static final String CSV_FILE_PATH = "C:/Users/yongsik/Desktop/result.csv";
+    public List<String> readHeader() {
+        log.info("come1");
+        Path path = Paths.get(CSV_FILE_PATH);
+        if (Files.notExists(path)) {
+            // 파일이 없으면 빈 리스트 반환
+
+            return Collections.emptyList();
+        }
+        log.info("come");
+        try (BufferedReader br = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            String headerLine = br.readLine();
+            if (headerLine == null || headerLine.isBlank()) {
+                return Collections.emptyList();
+            }
+            return Arrays.stream(headerLine.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            // 로깅 후 빈 리스트 반환하거나, RuntimeException 으로 재던지기
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
     }
 
 
