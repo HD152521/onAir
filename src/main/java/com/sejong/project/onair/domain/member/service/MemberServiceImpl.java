@@ -113,14 +113,6 @@ public class MemberServiceImpl implements MemberService{
         AccessToken accessToken = jwtProvider.generateAccessToken(member);
         RefreshToken refreshToken = jwtProvider.generateRefreshToken(member);
         TokenResponse tokenResponse = TokenResponse.of(accessToken, refreshToken);
-        response.addHeader(JWT_ACCESS_TOKEN_HEADER_NAME, JWT_ACCESS_TOKEN_TYPE + accessToken.token());
-
-        Cookie refreshTokenCookie = new Cookie(JWT_REFRESH_TOKEN_COOKIE_NAME, refreshToken.token());
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true);
-        refreshTokenCookie.setMaxAge((int) REFRESH_TOKEN_EXPIRE_TIME);
-        refreshTokenCookie.setPath("/"); //path로 지정된 곳에서만 쿠키데이터를 읽을 수 있음.
-        response.addCookie(refreshTokenCookie);
 
         return tokenResponse;
     }
