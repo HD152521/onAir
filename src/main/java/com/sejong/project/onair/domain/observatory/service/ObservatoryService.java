@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,12 +50,14 @@ public class ObservatoryService {
 
     public List<Observatory> getAllObservatory(){
         List<Observatory> observatories = observatoryRepository.findAll();
-        if(observatories.isEmpty()){
-            log.warn("[Service] 모든 observatory 가져오는데 빈 값임");
-//            throw new BaseException(ErrorCode.OBSERVATORY_NOT_FOUND);
+        try{
+            return observatoryRepository.findAll()
+                    .parallelStream()
+                    .collect(Collectors.toList());
+        }catch(Exception e){
+            log.warn("모든 관측소 가져오는데 실패 ");
         }
-        log.info("[Service] 모든 observatory데이터 가져옴.");
-        return observatories;
+        return null;
     }
 
     @Transactional
@@ -72,7 +75,11 @@ public class ObservatoryService {
 
 
     public ObservatoryResponse.UpdateDto updateObservatoryFromAirkorea() {
-        List<Observatory> myObservatoreis = observatoryRepository.findAll();
+        List<Observatory> myObservatoreis = getAllObservatory();
+        if(myObservatoreis.isEmpty() || myObservatoreis == null){
+            log.warn("데이터 가져오는데 실패");
+            return null;
+        }
         List<Observatory> airkoreaObservatories = getAirkoreaToObject();
 
         List<Observatory> newObservatories = new ArrayList<>(airkoreaObservatories);
@@ -86,7 +93,7 @@ public class ObservatoryService {
 
         if (newObservatories.isEmpty() && deletedObservatories.isEmpty()) log.info("[Service] 현재 관측소 정보가 최신입니다.");
         observatoryRepository.deleteAll(deletedObservatories);
-        observatoryRepository.saveAll(newObservatories); //fixme 여기 지금 latitue 변수명 오류남 왜인지 모름
+        observatoryRepository.saveAll(newObservatories);
         log.info("[Service] 업데이트 완료");
 
         return new ObservatoryResponse.UpdateDto(newObservatories, deletedObservatories);
