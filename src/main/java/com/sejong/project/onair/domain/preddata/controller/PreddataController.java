@@ -3,6 +3,7 @@ package com.sejong.project.onair.domain.preddata.controller;
 import com.sejong.project.onair.domain.preddata.dto.PreddataResponse;
 import com.sejong.project.onair.domain.preddata.model.Preddata;
 import com.sejong.project.onair.domain.preddata.service.PreddataService;
+import com.sejong.project.onair.global.exception.BaseResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,12 +28,12 @@ public class PreddataController {
     }
 
     @GetMapping("/get")
-    public List<PreddataResponse.SpecificDataDto> getSpecificData(
+    public BaseResponse<?> getSpecificData(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime,
             @RequestParam String airType
     ){
-        return preddataService.getSpecificData(dateTime, airType);
+        return BaseResponse.onSuccess(preddataService.getSpecificData(dateTime, airType));
     }
 
     @GetMapping("/get/file")

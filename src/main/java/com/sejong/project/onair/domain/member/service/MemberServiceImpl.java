@@ -1,5 +1,6 @@
 package com.sejong.project.onair.domain.member.service;
 
+import com.sejong.project.onair.domain.member.dto.MemberDetails;
 import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.domain.member.dto.MemberRequest;
 import com.sejong.project.onair.domain.member.dto.MemberResponse;
@@ -7,7 +8,9 @@ import com.sejong.project.onair.domain.member.repository.MemberRepository;
 import com.sejong.project.onair.global.Oauth.dto.GoogleTokenDto;
 import com.sejong.project.onair.global.Oauth.dto.GoogleUserProfileDto;
 import com.sejong.project.onair.global.Oauth.service.OAuth2UserAuthCodeServiceImpl;
+import com.sejong.project.onair.global.exception.BaseException;
 import com.sejong.project.onair.global.exception.BaseResponse;
+import com.sejong.project.onair.global.exception.codes.ErrorCode;
 import com.sejong.project.onair.global.token.JwtProvider;
 import com.sejong.project.onair.global.token.vo.AccessToken;
 import com.sejong.project.onair.global.token.vo.RefreshToken;
@@ -45,7 +48,7 @@ public class MemberServiceImpl implements MemberService{
         GoogleUserProfileDto googleUserProfile = oauth2UserAuthCodeService.getGoogleUserProfile(googleToken.access_token());
         log.info("로그인 성공");
 
-        Member member = memberRepository.findMemberByEmail(googleUserProfile.email());
+        Member member = getMember(googleUserProfile.email());
 
         if(member == null){
             member = createMember(googleUserProfile.name(),googleUserProfile.email());
@@ -60,7 +63,7 @@ public class MemberServiceImpl implements MemberService{
     }
 
     public MemberResponse.LoginResponseDto testLogin(HttpServletResponse response){
-        Member testUser = memberRepository.findMemberByEmail("test@gmail.com");
+        Member testUser = getMember("test@gmail.com");
         if(testUser==null){
             testUser= createMember("test","test@gmail.com");
         }
@@ -148,5 +151,28 @@ public class MemberServiceImpl implements MemberService{
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok(BaseResponse.onSuccess("token 발급 완료"));
+    }
+
+    public Member getMember(MemberDetails memberDetails){
+        try {
+            String email = memberDetails.getUsername();
+            return getMember(email);
+        } catch (Exception e){
+            log.warn(e.getMessage());
+            throw new BaseException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+    }
+
+    public Member getMember(String email){
+        try {
+            return memberRepository.findMemberByEmail(email)
+                    .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+        } catch (BaseException e){
+            log.warn("멤버 조회 실패: {}", e.getMessage());
+            throw e; // 예외를 다시 명확하게 던짐
+        } catch (Exception e){
+            log.error("알 수 없는 에러 발생: {}", e.getMessage(), e);
+            throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR); // 예상치 못한 예외
+        }
     }
 }

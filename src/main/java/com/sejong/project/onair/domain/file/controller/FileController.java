@@ -9,10 +9,12 @@ import com.sejong.project.onair.domain.file.service.FileServiceImpl;
 import com.sejong.project.onair.domain.file.swagger.FileUploadLog;
 import com.sejong.project.onair.domain.file.swagger.MappingFile;
 import com.sejong.project.onair.domain.file.swagger.UploadFile;
+import com.sejong.project.onair.domain.member.dto.MemberDetails;
 import com.sejong.project.onair.global.exception.BaseResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,20 +29,20 @@ public class FileController {
 
     @PostMapping("/upload")
     @UploadFile
-    public BaseResponse<?> uploadFile(@RequestParam("file") MultipartFile file){
-        return BaseResponse.onSuccess(fileService.uploadFile(file));
+    public BaseResponse<?> uploadFile(@RequestParam("file") MultipartFile file,@AuthenticationPrincipal MemberDetails memberDetails){
+        return BaseResponse.onSuccess(fileService.uploadFile(file,memberDetails));
     }
 
     @PostMapping("/mapping")
     @MappingFile
-    public BaseResponse<?> mappingData(@RequestBody FileRequest.MappingResultDto mappingResultDto){
-        return BaseResponse.onSuccess(fileService.readMappingData(mappingResultDto));
+    public BaseResponse<?> mappingData(@RequestBody FileRequest.MappingResultDto mappingResultDto,@AuthenticationPrincipal MemberDetails memberDetails){
+        return BaseResponse.onSuccess(fileService.readMappingData(mappingResultDto,memberDetails));
     }
 
     @GetMapping("/upload/log")
     @FileUploadLog
-    public BaseResponse<?> getUploadLog(){
-        return BaseResponse.onSuccess(fileService.getUploadLog());
+    public BaseResponse<?> getUploadLog(@AuthenticationPrincipal MemberDetails memberDetails){
+        return BaseResponse.onSuccess(fileService.getUploadLog(memberDetails));
     }
 
     @GetMapping("/readData")
@@ -49,7 +51,7 @@ public class FileController {
     }
 
     @GetMapping("/read/{fileId}")
-    public BaseResponse<?> readFileFromId(@PathVariable String fileId){
-        return BaseResponse.onSuccess(fileService.readDataFromId(fileId));
+    public BaseResponse<?> readFileFromId(@PathVariable String fileId,@AuthenticationPrincipal MemberDetails memberDetails){
+        return BaseResponse.onSuccess(fileService.readDataFromId(fileId,memberDetails));
     }
 }

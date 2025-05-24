@@ -3,6 +3,8 @@ package com.sejong.project.onair.domain.preddata.dto;
 import com.sejong.project.onair.domain.preddata.model.Preddata;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.function.Function;
 
 public class PreddataResponse{
     public record ResponseDto(
@@ -38,22 +40,25 @@ public class PreddataResponse{
     }
 
     public record SpecificDataDto(
-            Double vlaue,
+            Double value,
             double dmX,
             double dmY
     ){
+        private static final Map<String, Function<Preddata, Double>> AIR_TYPE_GETTERS = Map.of(
+                "so2", Preddata::getSo2,
+                "pm25", Preddata::getPm25,
+                "pm10", Preddata::getPm10,
+                "o3", Preddata::getO3,
+                "no2", Preddata::getNo2,
+                "noAvg", Preddata::getNoAvg,
+                "co", Preddata::getCo,
+                "co2", Preddata::getCo2,
+                "ch4", Preddata::getCh4
+        );
+
         public static SpecificDataDto from(Preddata preddata, String airType){
-            Double value;
-            if(airType.equals("so2")) value = preddata.getSo2();
-            else if(airType.equals("pm25")) value = preddata.getPm25();
-            else if(airType.equals("pm10")) value = preddata.getPm10();
-            else if(airType.equals("o3")) value = preddata.getO3();
-            else if(airType.equals("no2")) value = preddata.getNo2();
-            else if(airType.equals("noAvg")) value= preddata.getNoAvg();
-            else if(airType.equals("co")) value = preddata.getCo();
-            else if(airType.equals("co2")) value = preddata.getCo2();
-            else if(airType.equals("ch4")) value = preddata.getCh4();
-            else value = null;
+            Function<Preddata, Double> getter = AIR_TYPE_GETTERS.get(airType);
+            Double value = (getter != null) ? getter.apply(preddata) : null;
             return new SpecificDataDto(value, preddata.getDmX(), preddata.getDmY());
         }
     }
