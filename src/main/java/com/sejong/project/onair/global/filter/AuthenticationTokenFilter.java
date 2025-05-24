@@ -50,6 +50,7 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
         final String[] WHITELIST_PATHS = {
                 "/observatory/airkorea",
                 "/observatory/get/loc",
+                "/observatory/data",
                 "/compWeather/get",
                 "/file/readData",
                 "/pred/get",

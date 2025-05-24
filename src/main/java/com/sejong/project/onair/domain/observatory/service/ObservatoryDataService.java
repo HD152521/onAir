@@ -34,6 +34,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.math3.util.Precision.round;
@@ -204,9 +205,7 @@ public class ObservatoryDataService {
         if(currentHour != lastHour){
             log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 시작");
 
-            //todo list에 있는 값 저장하기
             failedList.clear();
-
             //Note 모든거 하나씩 가져오기
 //            List<ObservatoryData> todayLastObservatoryData = getLastObjectDatasFromAirkorea();
             //note random값 10개
@@ -222,15 +221,16 @@ public class ObservatoryDataService {
                     failedList.add(stationName);
                 }
             }
+
             try{
                 observatoryDataRepository.saveAll(saveList);
             }catch (Exception e){
-//                throw new BaseException(ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
                 log.warn("{}",ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
             }
             lastHour=LocalDateTime.now().getHour();
             log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 완료!");
             log.info("[Service] currentHour : {}, lastHour:{}",currentHour,lastHour);
+
         }else{
             log.info("시간 달라서 실패한것만 확인함");
             if(failedList.isEmpty()) return;
@@ -255,27 +255,20 @@ public class ObservatoryDataService {
 
 
     public List<ObservatoryDataResponse.FlagFilterDto> getObjectDatasFromDBDate(ObservatoryDataRequest.HourRangeDto request){
-        List<ObservatoryData> datas = new ArrayList<>();
-        List<ObservatoryDataResponse.FlagFilterDto> response = new ArrayList<>();
-
         try{
-            datas = observatoryDataRepository.
+            return observatoryDataRepository.
                     findByStationNameAndDataTimeBetweenOrderByDataTimeAsc(
                             request.nation(),
                             request.startDate(),
-                            request.endDate());
+                            request.endDate()
+                    ).parallelStream()
+                    .map(data -> ObservatoryDataResponse.FlagFilterDto.to(data))
+                    .collect(Collectors.toList());
         }catch(Exception e){
             log.warn("datas가져오는 실패함");
         }
 
-        if(datas.isEmpty()) {
-            log.warn("[Service] 해당 기간에 데이터가 없습니다.");
-//            throw new BaseException(ErrorCode.DATA_NOT_FOUND);
-            //todo 없을 경우 에어 코리아에서 가져오기
-        }
-        response = ObservatoryDataResponse.FlagFilterDto.toAll(datas);
-
-        return response;
+        return null;
     }
 
     //note db에서 마지막 데이터만 가져옴
@@ -294,22 +287,23 @@ public class ObservatoryDataService {
         return response;
     }
 
-    //todo 마지막 데이터 가져와서 현재 시간이랑 같은지 확인하기.
     public List<ObservatoryDataResponse.FlagFilterDto> getNowDataAllFromDB(){
-        List<ObservatoryDataResponse.FlagFilterDto> dtos = getLastDataAllFromDB();
-        List<ObservatoryDataResponse.FlagFilterDto> response = new ArrayList<>();
-        int nowHour = LocalDateTime.now().getHour();
+        List<Observatory> observatories = observatoryService.getAllObservatory();
+        LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime oneHourLater = now.plusHours(1);
 
-        for(ObservatoryDataResponse.FlagFilterDto dto: dtos){
-            if(dto.dataTime().getHour()==nowHour) response.add(dto);
+        for(Observatory ob : observatories){
+            try {
+                return observatoryDataRepository.findByDataTimeBetween(now,oneHourLater)
+                        .parallelStream()
+                        .map(data -> ObservatoryDataResponse.FlagFilterDto.to(data))
+                        .collect(Collectors.toList());
+            }catch (Exception e){
+                log.warn(e.getMessage());
+                log.warn("[Service] {} 마지막 데이터 가져오는데 오류",ob.getStationName());
+            }
         }
-
-        if(response.isEmpty()){
-            log.warn("현재 데이터 가져오는데 실패함.");
-//            throw new BaseException(ErrorCode.OBSERVATORY_DATA_NOT_FOUND);
-        }
-
-        return response;
+        return null;
     }
 
     @Transactional
