@@ -17,13 +17,10 @@ services:
       - backend
 
   spring:
-#    build:
-#      context: ./../../../
-#      dockerfile: Dockerfile
-    #추가본
     image: yong6/onair:latest
-
     container_name: spring-app
+    environment:
+      JAVA_OPTS: "-Xmx1024m -Xms512m"
     ports:
       - "8080:8080"
     depends_on:
