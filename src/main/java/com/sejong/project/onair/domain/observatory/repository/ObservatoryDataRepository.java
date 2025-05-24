@@ -13,4 +13,5 @@ public interface ObservatoryDataRepository extends JpaRepository<ObservatoryData
             LocalDateTime start,
             LocalDateTime end
     );
+    List<ObservatoryData> findByDataTimeBetween(LocalDateTime start, LocalDateTime end);
 }
