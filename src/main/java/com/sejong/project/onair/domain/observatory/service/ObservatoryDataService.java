@@ -28,9 +28,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -54,7 +52,7 @@ public class ObservatoryDataService {
 
 
     private final List<String> failedList = new ArrayList<>();
-    //    private int lastHour = LocalDateTime.now().getHour();
+//        private int lastHour = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().getHour();
     private int lastHour = -1;
 
     /*
@@ -198,7 +196,7 @@ public class ObservatoryDataService {
 //    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
     @Transactional
     public void updateObservatoryData(){
-//        int currentHour = LocalDateTime.now().getHour();
+//        int currentHour = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().getHour();
         int currentHour = -10;
         log.info("[Service] update서비스 들어옴 시간:{} 시간:{}",currentHour,lastHour);
         List<ObservatoryData> saveList = new ArrayList<>();
@@ -227,16 +225,18 @@ public class ObservatoryDataService {
             }catch (Exception e){
                 log.warn("{}",ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
             }
-            lastHour=LocalDateTime.now().getHour();
+
+            lastHour=ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().getHour();
             log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 완료!");
             log.info("[Service] currentHour : {}, lastHour:{}",currentHour,lastHour);
 
         }else{
             log.info("시간 달라서 실패한것만 확인함");
+            LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
             if(failedList.isEmpty()) return;
             for(String station: failedList){
                 ObservatoryData data = getLastObjectDataFromAirkorea(station);
-                if(data.getDataTime().getHour() == LocalDateTime.now().getHour()){
+                if(data.getDataTime().getHour() == now.getHour()){
                     observatoryDataRepository.save(data);
                     failedList.remove(station);
                 }
@@ -290,7 +290,7 @@ public class ObservatoryDataService {
     public List<ObservatoryDataResponse.FlagFilterDto> getNowDataAllFromDB(){
         log.info("now 데이터 가져오기 시작...");
         List<Observatory> observatories = observatoryService.getAllObservatory();
-        LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().withMinute(0).withSecond(0).withNano(0);
         LocalDateTime oneHourLater = now.plusHours(1);
         log.info("시작시간:{} 끝 시간{}",now,oneHourLater);
 
@@ -472,7 +472,7 @@ public class ObservatoryDataService {
 
     public void checkAirkoreaUpdate(ObservatoryData observatoryData){
         log.info("에어코리아 데이터가 최신인지 확인 / 데이터 시간:{}",observatoryData.getDataTime().getHour());
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
         if(observatoryData.getDataTime().getHour() != now.getHour()) throw new BaseException(ErrorCode.AIRKOREA_API_UPDATE_ERROR);
     }
 
