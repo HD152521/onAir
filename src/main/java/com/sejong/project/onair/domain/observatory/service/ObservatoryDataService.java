@@ -288,11 +288,12 @@ public class ObservatoryDataService {
     }
 
     public List<ObservatoryDataResponse.FlagFilterDto> getNowDataAllFromDB(){
+        log.info("now 데이터 가져오기 시작...");
         List<Observatory> observatories = observatoryService.getAllObservatory();
         LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
         LocalDateTime oneHourLater = now.plusHours(1);
+        log.info("시작시간:{} 끝 시간{}",now,oneHourLater);
 
-        for(Observatory ob : observatories){
             try {
                 return observatoryDataRepository.findByDataTimeBetween(now,oneHourLater)
                         .parallelStream()
@@ -300,9 +301,9 @@ public class ObservatoryDataService {
                         .collect(Collectors.toList());
             }catch (Exception e){
                 log.warn(e.getMessage());
-                log.warn("[Service] {} 마지막 데이터 가져오는데 오류",ob.getStationName());
+                log.warn("관측 데이터 가져오는데 실패");
             }
-        }
+
         return null;
     }
 
