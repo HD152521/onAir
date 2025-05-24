@@ -8,8 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,14 +30,18 @@ public class CompWeatherService {
         return null;
     }
 
-    public List<CompWeatherResponseDto> getLoca(){
-        List<CompWeather> datas = getAll();
+    public List<CompWeatherResponseDto> getLoca(LocalDateTime startDate){
+        LocalDateTime start = startDate.withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+        LocalDateTime end   = start.plusHours(1);
+
+        List<CompWeather> datas = new ArrayList<>();
         try{
-            List<CompWeatherResponseDto> response = new ArrayList<>();
-            for(CompWeather comp : datas){
-                response.add(CompWeatherResponseDto.from(comp));
-            }
-            return response;
+            return compWeatherRepository.findByDateTimeBetween(start,end)
+                    .parallelStream()
+                    .map(data -> CompWeatherResponseDto.from(data))
+                    .collect(Collectors.toList());
         }catch (Exception e){
             log.warn("responseDto변환하는데 실패함");
         }

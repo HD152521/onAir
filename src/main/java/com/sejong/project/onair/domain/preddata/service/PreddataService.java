@@ -58,18 +58,15 @@ public class PreddataService {
 
     public List<PreddataResponse.SpecificDataDto> getSpecificData(LocalDateTime dateTime, String airType){
 
-        List<PreddataResponse.SpecificDataDto> response = new ArrayList<>();
         LocalDateTime start = dateTime .withMinute(0)
                 .withSecond(0)
                 .withNano(0);
         LocalDateTime end   = start.plusHours(1);
-        List<Preddata> datas = preddataRepository.findByMeasurementTimeBetween(start, end);
 
-        for(Preddata data : datas){
-            response.add(PreddataResponse.SpecificDataDto.from(data,airType));
-        }
-
-        return response;
+        return preddataRepository.findByMeasurementTimeBetween(start, end)
+                .parallelStream()
+                .map(data -> PreddataResponse.SpecificDataDto.from(data, airType))
+                .collect(Collectors.toList());
     }
 
     private static final String CSV_FILE_PATH = "C:/Users/yongsik/Desktop/result.csv";

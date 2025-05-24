@@ -8,7 +8,10 @@ import com.sejong.project.onair.domain.file.model.FileType;
 import com.sejong.project.onair.domain.file.model.UploadFile;
 import com.sejong.project.onair.domain.file.repository.FileDataRepository;
 import com.sejong.project.onair.domain.file.repository.FileRepository;
+import com.sejong.project.onair.domain.member.dto.MemberDetails;
 import com.sejong.project.onair.domain.member.model.Member;
+import com.sejong.project.onair.domain.member.repository.MemberRepository;
+import com.sejong.project.onair.domain.member.service.MemberService;
 import com.sejong.project.onair.global.beanProcessor.FileTypeHandlerProcessor;
 import com.sejong.project.onair.global.exception.BaseException;
 import com.sejong.project.onair.global.exception.codes.ErrorCode;
@@ -40,6 +43,7 @@ public class FileServiceImpl{
     private final FileDataRepository fileDataRepository;
     private final FileTypeHandlerProcessor processor;
 
+    private final MemberService memberService;
 
     // /없으면 상대경로임
     private String dir = "./upload";
@@ -61,14 +65,9 @@ public class FileServiceImpl{
     }
 
     @Transactional
-    public FileResponse.HeaderDto uploadFile(MultipartFile file){
+    public FileResponse.HeaderDto uploadFile(MultipartFile file, MemberDetails memberDetails){
         log.info("[File] upload controller진입");
-
-
-        Member member = null;
-        //fixme 임시로 null값 처리함.
-//        Member member = memberRepository.findMemberByEmail(principal.getAttributes().get("email").toString())
-//                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+        Member member = memberService.getMember(memberDetails);
 
         FileType fileType = FileType.fromMimeType(file.getContentType());
         String uploadFileName = StringUtils.cleanPath(file.getOriginalFilename());
@@ -107,11 +106,8 @@ public class FileServiceImpl{
         return FileResponse.HeaderDto.from(fileService.readHeader(file),uuid);
     }
 
-    public List<FileResponse.FileLogDto> getUploadLog(){
-        //fixme member값 가져오기
-        //        Member member = memberRepository.findMemberByEmail(principal.getAttributes().get("email").toString())
-        //                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
-        Member member = null;
+    public List<FileResponse.FileLogDto> getUploadLog(MemberDetails memberDetails){
+        Member member = memberService.getMember(memberDetails);
 
         List<UploadFile> uploadFiles = fileRepository.findUploadFilesByMember(member);
         if(uploadFiles.isEmpty()) throw new BaseException(ErrorCode.FILELOG_NOT_FOUND);
@@ -121,8 +117,9 @@ public class FileServiceImpl{
         return logDtos;
     }
 
-    public List<DataDto> readMappingData(FileRequest.MappingResultDto mappingResultDto){
+    public List<DataDto> readMappingData(FileRequest.MappingResultDto mappingResultDto,MemberDetails memberDetails){
         log.info("[File] Mapping Controller 진입");
+        Member member = memberService.getMember(memberDetails);
 
         UploadFile uploadFile = getFileById(mappingResultDto.fileId()) ;
         log.info("fileId:{}",mappingResultDto.fileId());
@@ -165,9 +162,22 @@ public class FileServiceImpl{
         return dataDtos;
     }
 
-    public List<DataDto> readDataFromId(String fileId){
+    public List<DataDto> readDataFromId(String fileId,MemberDetails memberDetails){
         List<DataDto> response = new ArrayList<>();
+        Member member = memberService.getMember(memberDetails);
         List<FileData> datas = fileDataRepository.findFileDatasByFileId(fileId);
+        UploadFile file = null;
+        try {
+             file = fileRepository.findUploadFileByFileId(fileId).orElseThrow(
+                    () -> new BaseException(ErrorCode.FILE_NOT_FOUND));
+             if(!file.getMember().getMemberName().equals(member.getMemberName())){
+                 log.warn("신청하신 멤버가 아닙니다. (이게 우선임)");
+                 throw new BaseException(ErrorCode.MEMBER_NOT_FOUND);
+             }
+        }catch (Exception e){
+            log.warn(e.getMessage());
+        }
+
         if(datas == null){
             log.warn("해당 id 가진 파일존재 안함");
             return null;

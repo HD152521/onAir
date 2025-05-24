@@ -48,16 +48,18 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
         log.info("진입 path:{}",path);
 
         final String[] WHITELIST_PATHS = {
+                "/observatory/airkorea",
+                "/observatory/get/loc",
+                "/compWeather/get",
+                "/file/readData",
+                "/pred/get",
                 "/member",
-                "/signup",
                 "/swagger",
-                "/observatory",
                 "/test",
                 "/health",
                 "/api-test",
                 "/swagger-ui",
-                "/v3",
-                "/"
+                "/v3"
         };
 
         for (String allowed : WHITELIST_PATHS) {
