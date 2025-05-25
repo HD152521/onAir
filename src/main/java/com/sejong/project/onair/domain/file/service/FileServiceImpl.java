@@ -32,6 +32,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -42,8 +43,6 @@ public class FileServiceImpl{
     private final FileRepository fileRepository;
     private final FileDataRepository fileDataRepository;
     private final FileTypeHandlerProcessor processor;
-
-    private final MemberService memberService;
 
     // /없으면 상대경로임
     private String dir = "./upload";
@@ -65,14 +64,17 @@ public class FileServiceImpl{
     }
 
     @Transactional
-    public FileResponse.HeaderDto uploadFile(MultipartFile file, MemberDetails memberDetails){
+        public FileResponse.HeaderDto uploadFile(MultipartFile file, Member member){
         log.info("[File] upload controller진입");
-        Member member = memberService.getMember(memberDetails);
 
         FileType fileType = FileType.fromMimeType(file.getContentType());
         String uploadFileName = StringUtils.cleanPath(file.getOriginalFilename());
         String uuid = UUID.randomUUID().toString();
         String realName =  uuid+ "_" + uploadFileName;
+
+        //파일 사이즈
+        long fileSizeInBytes = file.getSize();
+        double fileSizeInKB = fileSizeInBytes / 1024.0; //kb단위로변경
 
         FileService fileService = getFileServiceByFileType(fileType);
 
@@ -100,15 +102,14 @@ public class FileServiceImpl{
                 .fileId(uuid)
                 .member(member)
                 .fileType(fileType)
+                .fileSize(fileSizeInKB)
                 .build();
 
         fileRepository.save(uploadFile);
         return FileResponse.HeaderDto.from(fileService.readHeader(file),uuid);
     }
 
-    public List<FileResponse.FileLogDto> getUploadLog(MemberDetails memberDetails){
-        Member member = memberService.getMember(memberDetails);
-
+    public List<FileResponse.FileLogDto> getUploadLog(Member member){
         List<UploadFile> uploadFiles = fileRepository.findUploadFilesByMember(member);
         if(uploadFiles.isEmpty()) throw new BaseException(ErrorCode.FILELOG_NOT_FOUND);
         List<FileResponse.FileLogDto> logDtos = new ArrayList<>();
@@ -117,9 +118,8 @@ public class FileServiceImpl{
         return logDtos;
     }
 
-    public List<DataDto> readMappingData(FileRequest.MappingResultDto mappingResultDto,MemberDetails memberDetails){
+    public List<DataDto> readMappingData(FileRequest.MappingResultDto mappingResultDto,Member member){
         log.info("[File] Mapping Controller 진입");
-        Member member = memberService.getMember(memberDetails);
 
         UploadFile uploadFile = getFileById(mappingResultDto.fileId()) ;
         log.info("fileId:{}",mappingResultDto.fileId());
@@ -162,14 +162,19 @@ public class FileServiceImpl{
         return dataDtos;
     }
 
-    public List<DataDto> readDataFromId(String fileId,MemberDetails memberDetails){
+    public List<DataDto> readDataFromId(String fileId,Member member){
         List<DataDto> response = new ArrayList<>();
-        Member member = memberService.getMember(memberDetails);
-        List<FileData> datas = fileDataRepository.findFileDatasByFileId(fileId);
+        List<FileData> datas = fileDataRepository.findFileDatasByFileId(fileId)
+                .parallelStream()
+                .collect(Collectors.toList());
+        log.info("파일 데이터 가져옴");
+
         UploadFile file = null;
+
         try {
              file = fileRepository.findUploadFileByFileId(fileId).orElseThrow(
                     () -> new BaseException(ErrorCode.FILE_NOT_FOUND));
+             log.info("파일 데이터 가져옴 file:{}",file.getFileId());
              if(!file.getMember().getMemberName().equals(member.getMemberName())){
                  log.warn("신청하신 멤버가 아닙니다. (이게 우선임)");
                  throw new BaseException(ErrorCode.MEMBER_NOT_FOUND);

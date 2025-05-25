@@ -20,4 +20,5 @@ public interface MemberService {
     ResponseEntity<BaseResponse<?>> updateRefreshToken(HttpServletRequest request, HttpServletResponse response);
     Member getMember(MemberDetails memberDetails);
     Member getMember(String email);
+    MemberResponse.MemberProfileDto getMemberProfile(MemberDetails memberDetails);
 }

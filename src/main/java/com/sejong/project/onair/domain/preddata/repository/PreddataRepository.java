@@ -9,4 +9,9 @@ import java.util.List;
 public interface PreddataRepository extends JpaRepository<Preddata,Long> {
     Preddata findPreddataById(Long id);
     List<Preddata> findByMeasurementTimeBetween(LocalDateTime start, LocalDateTime end);
+    List<Preddata> findByStationNameAndMeasurementTimeBetweenOrderByMeasurementTimeAsc(
+            String stationName,
+            LocalDateTime start,
+            LocalDateTime end
+    );
 }

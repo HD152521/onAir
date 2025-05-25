@@ -31,6 +31,7 @@ public class Member extends BaseEntity {
     @NotNull private String email;          //이메일
     @NotNull private Role role;             //권한
     @NotNull private boolean isFirstLogin;  //처음로그인
+    private String imgUrl;
 
 
     public enum Role{
@@ -42,10 +43,11 @@ public class Member extends BaseEntity {
     }
 
     @Builder
-    public Member(String memberName,String email){
+    public Member(String memberName,String email,String imgUrl){
         this.memberName = memberName;
         this.email = email;
         this.role = Role.USER;
         this.isFirstLogin = true;
+        this.imgUrl = imgUrl;
     }
 }
