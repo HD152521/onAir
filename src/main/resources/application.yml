@@ -36,6 +36,10 @@ spring:
               - email
               - profile
             redirect-uri: http://localhost:5173/loadingAuth
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
 
 springdoc:
   swagger-ui:
