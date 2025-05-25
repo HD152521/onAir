@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -300,26 +301,6 @@ public class ObservatoryDataService {
         return observatorieDatas;
     }
 
-    public List<ObservatoryData> getRandomObjectDatasFromAirkorea(){
-        log.info("[Service] 관측소 별 최신 데이터 하나만 가져오기");
-        List<Observatory> observatories = observatoryService.getAllObservatory();
-        List<ObservatoryData> observatorieDatas = new ArrayList<>();
-
-        Random rand = new Random();
-
-        for(int i=0;i<10;i++){
-            Observatory tmp = observatories.get(rand.nextInt(664)+1);
-            try {
-                observatorieDatas.add(getLastObjectDataFromAirkorea(tmp.getStationName()));
-            }catch(Exception e){
-                log.info("[Service] {}관측소 데이터 가져오는데 실패", tmp.getStationName());
-            }
-        }
-
-        return observatorieDatas;
-    }
-
-
 
 //    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
     @Transactional
@@ -355,7 +336,7 @@ public class ObservatoryDataService {
         return getObjectDatasFromDBDate(new ObservatoryDataRequest.HourRangeDto(startDateTime,endDateTime, stationName));
     }
 
-
+    @Cacheable(value = "observatoryDataList", unless = "#result == null")
     public List<ObservatoryDataResponse.FlagFilterDto> getObjectDatasFromDBDate(ObservatoryDataRequest.HourRangeDto request){
         try{
             return observatoryDataRepository.
@@ -374,6 +355,7 @@ public class ObservatoryDataService {
     }
 
     //note db에서 마지막 데이터만 가져옴
+    @Cacheable(value = "observatoryDataList", unless = "#result == null")
     public List<ObservatoryDataResponse.FlagFilterDto> getLastDataAllFromDB(){
         List<Observatory> observatories = observatoryService.getAllObservatory();
         List<ObservatoryDataResponse.FlagFilterDto> response = new ArrayList<>();
@@ -389,6 +371,7 @@ public class ObservatoryDataService {
         return response;
     }
 
+    @Cacheable(value = "observatoryDataList", unless = "#result == null")
     public List<ObservatoryDataResponse.FlagFilterDto> getNowDataAllFromDB(){
         log.info("now 데이터 가져오기 시작...");
         List<Observatory> observatories = observatoryService.getAllObservatory();

@@ -41,6 +41,13 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
 
+  cache:
+    type:
+      caffeine:
+        spec: maximumSize=1000,expireAfterWrite=10m
+
+
+
 springdoc:
   swagger-ui:
     path: /api-test  # swagger-ui ?? ??? ?? ??, ?? ??? ???? http://localhost:8080/swagger-ui/index.html? ????? ?.

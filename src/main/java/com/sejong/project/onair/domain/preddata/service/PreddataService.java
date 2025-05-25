@@ -11,6 +11,7 @@ import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +61,7 @@ public class PreddataService {
         return response;
     }
 
+    @Cacheable(value = "predDataList", unless = "#result == null")
     public List<PreddataResponse.SpecificDataDto> getSpecificData(LocalDateTime dateTime, String airType){
 
         LocalDateTime start = dateTime .withMinute(0)
@@ -106,6 +108,7 @@ public class PreddataService {
         return getDataFormDate(new PreddataRequest.HourRangeDto(startDateTime,endDateTime, stationName));
     }
 
+    @Cacheable(value = "predDataList", unless = "#result == null")
     public List<PreddataResponse.ResponseDto> getDataFormDate(PreddataRequest.HourRangeDto request){
         try{
             return preddataRepository.

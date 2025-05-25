@@ -19,6 +19,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -115,6 +116,7 @@ public class FileServiceImpl{
         return FileResponse.HeaderDto.from(fileService.readHeader(file),uuid);
     }
 
+    @Cacheable(value = "uploadlog", unless = "#result == null")
     public List<FileResponse.FileLogDto> getUploadLog(Member member){
         List<UploadFile> uploadFiles = fileRepository.findUploadFilesByMember(member);
         if(uploadFiles.isEmpty()) throw new BaseException(ErrorCode.FILELOG_NOT_FOUND);
@@ -123,6 +125,7 @@ public class FileServiceImpl{
         for(UploadFile file: uploadFiles) logDtos.add(FileResponse.FileLogDto.from(file));
         return logDtos;
     }
+
 
     public List<DataDto> readMappingData(FileRequest.MappingResultDto mappingResultDto,Member member){
         log.info("[File] Mapping Controller 진입");
@@ -139,10 +142,10 @@ public class FileServiceImpl{
             log.error(e.getMessage());
             throw new BaseException(ErrorCode.FILE_READ_ERROR);
         }
-
         return dataDtos;
     }
 
+    @Cacheable(value = "upload", unless = "#result == null")
     public UploadFile getFileById(String fileId){
         return fileRepository.findUploadFileByFileId(fileId).
                 orElseThrow(() -> new BaseException(ErrorCode.FILE_NOT_FOUND));
@@ -154,6 +157,7 @@ public class FileServiceImpl{
         return fileService;
     }
 
+    @Cacheable(value = "upload", unless = "#result == null")
     public List<String> readData(MultipartFile file){
         log.info("[File] readdata진입");
         FileService fileService = getFileServiceByFileType(FileType.fromMimeType(file.getContentType()));
@@ -168,6 +172,7 @@ public class FileServiceImpl{
         return dataDtos;
     }
 
+    @Cacheable(value = "readData", unless = "#result == null")
     public List<DataDto> readDataFromId(String fileId,Member member){
         List<DataDto> response = new ArrayList<>();
         List<FileData> datas = fileDataRepository.findFileDatasByFileId(fileId)

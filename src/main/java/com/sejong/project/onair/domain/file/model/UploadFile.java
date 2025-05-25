@@ -15,6 +15,12 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE upload_file SET is_deleted = true, deleted_at = now() where id = ?")
 @SQLRestriction("is_deleted is FALSE")
+@Table(
+        name = "upload_file",
+        indexes = {
+                @Index(name = "idx_file_id", columnList = "file_id")
+        }
+)
 public class UploadFile extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

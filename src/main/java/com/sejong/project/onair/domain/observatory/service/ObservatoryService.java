@@ -13,10 +13,12 @@ import com.sejong.project.onair.domain.observatory.repository.ObservatoryReposit
 import com.sejong.project.onair.global.exception.BaseException;
 import com.sejong.project.onair.global.exception.BaseResponse;
 import com.sejong.project.onair.global.exception.codes.ErrorCode;
-import com.sejong.project.onair.global.exception.codes.reason.Reason;
+
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -48,6 +50,7 @@ public class ObservatoryService {
     }
 
 
+    @Cacheable(value = "observatoryList", unless = "#result == null")
     public List<Observatory> getAllObservatory(){
         try{
             return observatoryRepository.findAll()
@@ -81,7 +84,7 @@ public class ObservatoryService {
     }
 
 
-
+    @CacheEvict(value = "observatoryList", allEntries = true, beforeInvocation = true)
     public ObservatoryResponse.UpdateDto updateObservatoryFromAirkorea() {
         List<Observatory> myObservatoreis = getAllObservatory();
         if(myObservatoreis.isEmpty() || myObservatoreis == null){
@@ -213,6 +216,8 @@ public class ObservatoryService {
         List<Observatory> observatories = getAllObservatory();
         return ObservatoryResponse.FeatureCollectionDto.from(observatories);
     }
+
+    @CacheEvict(value = "observatoryList", allEntries = true)
     public ObservatoryResponse.LocDto getObservatoryLocaByStationName(String statinoName){
         try{
             Observatory observatory = observatoryRepository.findObservatoryByStationName(statinoName).orElseThrow(
