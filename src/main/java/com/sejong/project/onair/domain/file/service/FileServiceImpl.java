@@ -77,10 +77,10 @@ public class FileServiceImpl{
         double fileSizeInKB = fileSizeInBytes / 1024.0; //kb단위로변경
 
         log.info("filesize:{}",fileSizeInBytes);
-        if(fileSizeInKB*1024>1){
-            log.warn("용량이 너무 큼");
-            throw new BaseException(ErrorCode.FILE_SIZE_ERROR);
-        }
+//        if(fileSizeInKB*1024>1){
+//            log.warn("용량이 너무 큼");
+//            throw new BaseException(ErrorCode.FILE_SIZE_ERROR);
+//        }
 
         FileService fileService = getFileServiceByFileType(fileType);
 
