@@ -76,6 +76,11 @@ public class FileServiceImpl{
         long fileSizeInBytes = file.getSize();
         double fileSizeInKB = fileSizeInBytes / 1024.0; //kb단위로변경
 
+        if(fileSizeInKB*1024>1){
+            log.warn("용량이 너무 큼");
+            throw new BaseException(ErrorCode.FILE_SIZE_ERROR);
+        }
+
         FileService fileService = getFileServiceByFileType(fileType);
 
         //Note 각 확장자명에 맞는 파일에 저장됨.
