@@ -82,6 +82,7 @@ public class ObservatoryService {
 
 
     @CacheEvict(value = "observatoryList", allEntries = true, beforeInvocation = true)
+    //todo 매월 업데이트하기
     public ObservatoryResponse.UpdateDto updateObservatoryFromAirkorea() {
         List<Observatory> myObservatoreis = getAllObservatory();
         if(myObservatoreis.isEmpty() || myObservatoreis == null){
