@@ -38,9 +38,6 @@ public class ObservatoryService {
     private final ObservatoryRepository observatoryRepository;
     private final AirKoreaApiService airKoreaApiService;
 
-    String serviceKey="%2FNVRnCn1bzQ%2F4cga43dtjmuDuRGXfjO6aBApVgpK6FTXRkpXAIl1LNYLtc02sLwjlaBnKwTuALillxw%2BrKDtig%3D%3D";
-
-
     public String getAirkoreaToString(){
         return airKoreaApiService.getObservatory();
     }
