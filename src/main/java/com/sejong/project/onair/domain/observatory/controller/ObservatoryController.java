@@ -55,4 +55,9 @@ public class ObservatoryController {
         return BaseResponse.onSuccess(observatoryService.getAllObservatoryLoca());
     }
 
+    @GetMapping("/get/loc/{statinoName}")
+    public BaseResponse<?> getObesrvatoryLocaByStation(@PathVariable String statinoName){
+        return BaseResponse.onSuccess(observatoryService.getObservatoryLocaByStationName(statinoName));
+    }
+
 }

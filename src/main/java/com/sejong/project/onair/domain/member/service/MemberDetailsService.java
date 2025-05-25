@@ -22,11 +22,12 @@ public class MemberDetailsService implements UserDetailsService {
     public MemberDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Member member = memberRepository.findMemberByEmail(username).orElseThrow(
                 () -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
-        log.info("loadUserByUsername : {}",username);
+        log.info("loadUserByUsername : {}",member.getEmail());
         if(member== null){
             log.info("[loadUserByUsername] username:{}, {}", username, ErrorCode.MEMBER_NOT_FOUND);
         }
         MemberAuthContext ctx = MemberAuthContext.of(member);
+        log.info("ctx생성");
         return new MemberDetails(ctx);
     }
 }

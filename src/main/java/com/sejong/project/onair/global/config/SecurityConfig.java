@@ -54,14 +54,14 @@ public class SecurityConfig {
                                         ,"/api-test").permitAll()
                         .requestMatchers("/file/readData","/pred/get","/compWeather/get").permitAll()
                         //fixme 임시용임 밑에는
-                        .requestMatchers("/compWeather/**","/file/**","/member/**",
-                                "/observatory/**","/pred/**").permitAll()
+//                        .requestMatchers("/compWeather/**","/file/**","/member/**",
+//                                "/observatory/**","/pred/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .securityContext((securityContext) -> {
                     securityContext
                             .securityContextRepository(securityContextRepository.securityContextRepository())
-                            .requireExplicitSave(true);
+                            .requireExplicitSave(false);
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)

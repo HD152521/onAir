@@ -97,6 +97,7 @@ public enum ErrorCode implements BaseCode {
     FILE_READ_ERROR(HttpStatus.BAD_REQUEST, "File-0001", "파일을 읽어오는데 실패하였습니다."),
     FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "File-0002", "해당 ID를 가진 파일을 찾을 수 없습니다."),
     FILELOG_NOT_FOUND(HttpStatus.BAD_REQUEST, "File-0003", "파일 업로드 기록을 가져올 수 없습니다."),
+    FILE_SIZE_ERROR(HttpStatus.BAD_REQUEST, "File-0004", "파일 사이즈가 너무 큽니다."),
 
     //로그인 에러
     EMAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "LOGIN-0001", "이메일이 잘못됨"),

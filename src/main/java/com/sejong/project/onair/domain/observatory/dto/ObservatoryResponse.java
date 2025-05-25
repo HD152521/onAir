@@ -99,4 +99,9 @@ public class ObservatoryResponse {
         }
     }
 
+    public record LocDto(
+            double dmX,
+            double dmY
+    ){}
+
 }

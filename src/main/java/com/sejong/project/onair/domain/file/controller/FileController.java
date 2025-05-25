@@ -22,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -36,6 +37,7 @@ public class FileController {
     @PostMapping("/upload")
     @UploadFile
     public BaseResponse<?> uploadFile(@RequestParam("file") MultipartFile file,@AuthenticationPrincipal MemberDetails memberDetails){
+        log.info("[Controller] upload들어옴");
         Member member = memberService.getMember(memberDetails);
         return BaseResponse.onSuccess(fileService.uploadFile(file,member));
     }

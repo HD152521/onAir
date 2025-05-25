@@ -213,4 +213,15 @@ public class ObservatoryService {
         List<Observatory> observatories = getAllObservatory();
         return ObservatoryResponse.FeatureCollectionDto.from(observatories);
     }
+    public ObservatoryResponse.LocDto getObservatoryLocaByStationName(String statinoName){
+        try{
+            Observatory observatory = observatoryRepository.findObservatoryByStationName(statinoName).orElseThrow(
+                    () -> new BaseException(ErrorCode.OBSERVATORY_NOT_FOUND)
+            );
+            return new ObservatoryResponse.LocDto(observatory.getDmX(),observatory.getDmY());
+        }catch (Exception e){
+            log.warn("{} 좌표 가져오는데 실패",statinoName);
+        }
+        return null;
+    }
 }
