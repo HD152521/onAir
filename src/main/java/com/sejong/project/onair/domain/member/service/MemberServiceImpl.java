@@ -88,7 +88,7 @@ public class MemberServiceImpl implements MemberService{
                 .secure(true)              // HTTPS 전용
                 .path("/")                 // 전체 경로에 대해 전송
                 .maxAge(ACCESS_TOKEN_EXPIRE_TIME) // 만료 시간
-                .sameSite("Strict")        // CSRF 방어
+                .sameSite("none")        // CSRF 방어
                 .build();
 
         ResponseCookie refreshCookie = ResponseCookie.from("REFRESH_TOKEN", tokenResponse.accessToken().token())
@@ -96,7 +96,7 @@ public class MemberServiceImpl implements MemberService{
                 .secure(true)
                 .path("/auth/refresh")      // 리프레시 전용 엔드포인트에만 전송
                 .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
-                .sameSite("Strict")
+                .sameSite("none")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -155,7 +155,7 @@ public class MemberServiceImpl implements MemberService{
                 .secure(true)
                 .path("/")
                 .maxAge(ACCESS_TOKEN_EXPIRE_TIME)
-                .sameSite("Strict")
+                .sameSite("none")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok(BaseResponse.onSuccess("token 발급 완료"));
