@@ -8,6 +8,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter

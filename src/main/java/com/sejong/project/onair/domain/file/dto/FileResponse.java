@@ -30,13 +30,15 @@ public class FileResponse {
     public record FileLogDto(
             String filename,
             String fileId,
-            double fileSize
+            double fileSize,
+            LocalDateTime createdAt
     ){
         public static FileLogDto from(UploadFile uploadFile){
             return new FileLogDto(
                 uploadFile.getUploadFileName(),
                 uploadFile.getFileId(),
-                    uploadFile.getFileSize()
+                    uploadFile.getFileSize(),
+                    uploadFile.getCreatedAt()
             );
         }
     }
