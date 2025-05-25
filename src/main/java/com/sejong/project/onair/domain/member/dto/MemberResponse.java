@@ -33,7 +33,7 @@ public class MemberResponse {
             return new MemberProfileDto(
                     member.getMemberName(),
                     member.getEmail(),
-                    null,
+                    member.getImgUrl(),
                     logs
             );
         }
