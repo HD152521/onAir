@@ -72,7 +72,6 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
         }
 
         log.info(request.getRequestURI());
-
         log.info("멤버 인증 시작!!");
         String token = jwtProvider.resolvAccesseToken(request);
         log.info("최종 token:{}",token);
