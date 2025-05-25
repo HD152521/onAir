@@ -60,7 +60,8 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
                 "/health",
                 "/api-test",
                 "/swagger-ui",
-                "/v3"
+                "/v3",
+                "/" //임시용
         };
 
         for (String allowed : WHITELIST_PATHS) {

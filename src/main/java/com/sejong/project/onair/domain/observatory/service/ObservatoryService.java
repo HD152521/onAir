@@ -49,7 +49,6 @@ public class ObservatoryService {
 
 
     public List<Observatory> getAllObservatory(){
-        List<Observatory> observatories = observatoryRepository.findAll();
         try{
             return observatoryRepository.findAll()
                     .parallelStream()
@@ -58,6 +57,15 @@ public class ObservatoryService {
             log.warn("모든 관측소 가져오는데 실패 ");
         }
         return null;
+    }
+
+    public List<Observatory> getRandomObservatory(){
+        List<Observatory> observatories = getAllObservatory();
+        List<Observatory> response = new ArrayList<>();
+        for(int i=0;i<10;i++){
+            response.add(observatories.get(i*4));
+        }
+        return response;
     }
 
     @Transactional
@@ -134,6 +142,10 @@ public class ObservatoryService {
             log.warn("json to Observatory객체 변환중 오류발생");
         }
         return list;
+    }
+
+    public List<Observatory> stringListToObjects(List<String> stationNames){
+        return observatoryRepository.findByStationNameIn(stationNames);
     }
 
     public List<Observatory> readObserbatoryDataByCsv(MultipartFile file){

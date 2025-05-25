@@ -18,8 +18,7 @@ public class PreddataResponse{
             Double noAvg,
             Double co,
             Double co2,
-            Double ch4,
-            Long id
+            Double ch4
     ) {
         public static ResponseDto from(Preddata preddata) {
             return new ResponseDto(
@@ -33,8 +32,7 @@ public class PreddataResponse{
                     preddata.getNoAvg(),
                     preddata.getCo(),
                     (preddata.getCo2PredFlag() == 0) ? preddata.getCo2() : preddata.getCo2Pred(),
-                    (preddata.getCh4PredFlag() == 0) ? preddata.getCh4() : preddata.getCh4Pred(),
-                    preddata.getId()
+                    (preddata.getCh4PredFlag() == 0) ? preddata.getCh4() : preddata.getCh4Pred()
             );
         }
     }
