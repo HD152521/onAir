@@ -6,6 +6,7 @@ import com.sejong.project.onair.domain.compWeather.repository.CompWeatherReposit
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ public class CompWeatherService {
         return null;
     }
 
+    @Cacheable(value = "compWeather", unless = "#result == null")
     public List<CompWeatherResponseDto> getLoca(LocalDateTime startDate){
         LocalDateTime start = startDate.withMinute(0)
                 .withSecond(0)

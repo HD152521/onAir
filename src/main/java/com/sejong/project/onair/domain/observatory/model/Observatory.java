@@ -17,6 +17,12 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE observatory SET is_deleted = true, deleted_at = now() where id = ?")
 @SQLRestriction("is_deleted is FALSE")
+@Table(
+        name = "observatory",
+        indexes = {
+                @Index(name = "idx_station_name", columnList = "station_name")
+        }
+)
 public class Observatory extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
