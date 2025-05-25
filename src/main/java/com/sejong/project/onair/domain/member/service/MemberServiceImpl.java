@@ -68,10 +68,13 @@ public class MemberServiceImpl implements MemberService{
     }
 
     public MemberResponse.LoginResponseDto testLogin(HttpServletResponse response){
-        Member testUser = getMember("onAir1@gmail.com");
+        Member testUser = getMember("onAir@gmail.com");
+
         if(testUser==null){
+            log.info("user널임");
             testUser= createMember("onAir","onAir@gmail.com",null);
         }
+
         TokenResponse tokenResponse = getTokenResponse(response,testUser);
         addTokenCookies(response,tokenResponse);
 

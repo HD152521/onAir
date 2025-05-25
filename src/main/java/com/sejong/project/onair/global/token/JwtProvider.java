@@ -183,12 +183,16 @@ public class JwtProvider implements TokenProvider {
 
     public Authentication getAuthentication(String token){
         String aud = parseAudience(token); // 토큰 Aud에 Member email을 기록하고 있음
+        log.info("aud:{}",aud);
         MemberDetails userDetails = memberDetailsService.loadUserByUsername(aud); // memberId를 기반으로 조회
+        log.info("memberDeatils:{}",userDetails.getUsername());
+        log.info("Member getAuthorities:{}",userDetails.getAuthorities());
         Authentication authentication
                 = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
                 userDetails.getAuthorities());
+        log.info("getAuthentication 잘됨");
         return authentication;
     }
 
@@ -237,6 +241,7 @@ public class JwtProvider implements TokenProvider {
                 }
             }
         }
+
         // 헤더에서 꺼내기
         String bearer = request.getHeader(JWT_ACCESS_TOKEN_HEADER_NAME);
         if (StringUtils.hasText(bearer) && bearer.startsWith(JWT_ACCESS_TOKEN_TYPE)) {

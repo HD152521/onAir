@@ -61,7 +61,7 @@ public class SecurityConfig {
                 .securityContext((securityContext) -> {
                     securityContext
                             .securityContextRepository(securityContextRepository.securityContextRepository())
-                            .requireExplicitSave(true);
+                            .requireExplicitSave(false);
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)

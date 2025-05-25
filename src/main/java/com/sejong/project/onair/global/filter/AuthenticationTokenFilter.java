@@ -104,6 +104,7 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
 
         } catch (io.jsonwebtoken.ExpiredJwtException ex) {
             // 만료 예외를 별도로 잡아서도 처리 가능
+            log.warn("authentication에서 오류발생");
             sendErrorResponse(response, ErrorCode.EXPIRED_ACCESS_TOKEN);
         }
 
