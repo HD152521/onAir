@@ -68,9 +68,9 @@ public class MemberServiceImpl implements MemberService{
     }
 
     public MemberResponse.LoginResponseDto testLogin(HttpServletResponse response){
-        Member testUser = getMember("test@gmail.com");
+        Member testUser = getMember("onAir1@gmail.com");
         if(testUser==null){
-            testUser= createMember("test","test@gmail.com",null);
+            testUser= createMember("onAir","onAir@gmail.com",null);
         }
         TokenResponse tokenResponse = getTokenResponse(response,testUser);
         addTokenCookies(response,tokenResponse);
@@ -174,10 +174,10 @@ public class MemberServiceImpl implements MemberService{
                     .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
         } catch (BaseException e){
             log.warn("멤버 조회 실패: {}", e.getMessage());
-            throw e; // 예외를 다시 명확하게 던짐
+            return null;
         } catch (Exception e){
             log.error("알 수 없는 에러 발생: {}", e.getMessage(), e);
-            throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR); // 예상치 못한 예외
+            return null;
         }
     }
 
