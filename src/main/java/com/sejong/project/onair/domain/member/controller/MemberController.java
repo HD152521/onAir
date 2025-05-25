@@ -1,5 +1,6 @@
 package com.sejong.project.onair.domain.member.controller;
 
+import com.sejong.project.onair.domain.member.dto.MemberDetails;
 import com.sejong.project.onair.domain.member.dto.MemberRequest;
 import com.sejong.project.onair.domain.member.dto.MemberResponse;
 import com.sejong.project.onair.domain.member.service.MemberService;
@@ -10,10 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -47,4 +46,8 @@ public class MemberController {
         return memberService.updateRefreshToken(request,response);
     }
 
+    @GetMapping("/profile")
+    public BaseResponse<?> getProfile(@AuthenticationPrincipal MemberDetails memberDetails){
+        return  BaseResponse.onSuccess(memberService.getMemberProfile(memberDetails));
+    }
 }

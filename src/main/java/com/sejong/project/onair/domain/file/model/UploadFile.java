@@ -23,6 +23,7 @@ public class UploadFile extends BaseEntity {
     private String uploadFileName;
     private String storeFileName;
     private String filePath;
+    private double fileSize;
     @Column(unique = true) private String fileId;
 
     @Transient
@@ -37,7 +38,8 @@ public class UploadFile extends BaseEntity {
     private Member member;
 
     @Builder
-    public UploadFile(String uploadFileName, String storeFileName, String filePath,Path realPath,String fileId,Member member, FileType fileType
+    public UploadFile(String uploadFileName, String storeFileName, String filePath,Path realPath,String fileId,Member member, FileType fileType,
+                      double fileSize
     ) {
         this.uploadFileName = uploadFileName;
         this.storeFileName = storeFileName;
@@ -46,6 +48,7 @@ public class UploadFile extends BaseEntity {
         this.fileId = fileId;
         this.member = member;
         this.fileType = fileType;
+        this.fileSize = fileSize;
     }
 
 }

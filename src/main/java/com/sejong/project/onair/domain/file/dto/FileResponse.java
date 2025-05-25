@@ -29,12 +29,14 @@ public class FileResponse {
 
     public record FileLogDto(
             String filename,
-            String fileId
+            String fileId,
+            double fileSize
     ){
         public static FileLogDto from(UploadFile uploadFile){
             return new FileLogDto(
                 uploadFile.getUploadFileName(),
-                uploadFile.getFileId()
+                uploadFile.getFileId(),
+                    uploadFile.getFileSize()
             );
         }
     }

@@ -1,5 +1,8 @@
 package com.sejong.project.onair.domain.member.service;
 
+import com.sejong.project.onair.domain.file.dto.FileResponse;
+import com.sejong.project.onair.domain.file.model.UploadFile;
+import com.sejong.project.onair.domain.file.service.FileServiceImpl;
 import com.sejong.project.onair.domain.member.dto.MemberDetails;
 import com.sejong.project.onair.domain.member.model.Member;
 import com.sejong.project.onair.domain.member.dto.MemberRequest;
@@ -30,6 +33,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static com.sejong.project.onair.global.token.JwtProperties.*;
 
 @Service
@@ -40,18 +45,18 @@ public class MemberServiceImpl implements MemberService{
     private final OAuth2UserAuthCodeServiceImpl oauth2UserAuthCodeService;
     private final JwtProvider jwtProvider;
     private final MemberRepository memberRepository;
+    private final FileServiceImpl fileService;
 
     public MemberResponse.LoginResponseDto googleLoginByToken(MemberRequest.GoogleLoginDto googleLoginDto, HttpServletResponse response){
         log.info("google Service들어옴");
         GoogleTokenDto googleToken = oauth2UserAuthCodeService.getGoogleAccessToken(googleLoginDto);
-        log.info("service에서 accessToken:{}",googleToken.access_token());
         GoogleUserProfileDto googleUserProfile = oauth2UserAuthCodeService.getGoogleUserProfile(googleToken.access_token());
-        log.info("로그인 성공");
+        log.info("로그인 성공 사용자:{} 이메일:{} 사진:{}",googleUserProfile.name(),googleUserProfile.email(),googleUserProfile.picture());
 
         Member member = getMember(googleUserProfile.email());
-
         if(member == null){
-            member = createMember(googleUserProfile.name(),googleUserProfile.email());
+            String imgUrl = googleUserProfile.picture();
+            member = createMember(googleUserProfile.name(),googleUserProfile.email(),imgUrl);
             log.info("처음 로그인 하는 회원");
         }
 
@@ -65,7 +70,7 @@ public class MemberServiceImpl implements MemberService{
     public MemberResponse.LoginResponseDto testLogin(HttpServletResponse response){
         Member testUser = getMember("test@gmail.com");
         if(testUser==null){
-            testUser= createMember("test","test@gmail.com");
+            testUser= createMember("test","test@gmail.com",null);
         }
         TokenResponse tokenResponse = getTokenResponse(response,testUser);
         addTokenCookies(response,tokenResponse);
@@ -97,12 +102,12 @@ public class MemberServiceImpl implements MemberService{
 
 
     @Transactional
-    public Member createMember(String username, String email) {
-
+    public Member createMember(String username, String email,String img) {
         log.info("new member create {} {}", username, email);
         Member member = Member.builder()
                 .memberName(username)
                 .email(email)
+                .imgUrl(img)
                 .build();
 
         memberRepository.save(member);
@@ -175,4 +180,12 @@ public class MemberServiceImpl implements MemberService{
             throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR); // 예상치 못한 예외
         }
     }
+
+    public MemberResponse.MemberProfileDto getMemberProfile(MemberDetails memberDetails){
+        Member member = getMember(memberDetails);
+        List<FileResponse.FileLogDto> logs = fileService.getUploadLog(member);
+        MemberResponse.MemberProfileDto profile = MemberResponse.MemberProfileDto.from(member,logs);
+        return  profile;
+    }
+
 }

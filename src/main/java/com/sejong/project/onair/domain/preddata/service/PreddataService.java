@@ -1,5 +1,8 @@
 package com.sejong.project.onair.domain.preddata.service;
 
+import com.sejong.project.onair.domain.observatory.dto.ObservatoryDataRequest;
+import com.sejong.project.onair.domain.observatory.dto.ObservatoryDataResponse;
+import com.sejong.project.onair.domain.preddata.dto.PreddataRequest;
 import com.sejong.project.onair.domain.preddata.dto.PreddataResponse;
 import com.sejong.project.onair.domain.preddata.model.Preddata;
 import com.sejong.project.onair.domain.preddata.repository.PreddataRepository;
@@ -19,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -94,5 +98,27 @@ public class PreddataService {
         }
     }
 
+    public List<PreddataResponse.ResponseDto> getDataFormDate(PreddataRequest.DayRangeDto request){
+        String stationName = request.stationName();
+        LocalDateTime startDateTime = request.start().atStartOfDay();
+        LocalDateTime endDateTime   = request.end().atTime(LocalTime.MAX);
+        log.info("[Service] {}부터 {}까지 {}데이터 가져오기 시작 ...",startDateTime,endDateTime,stationName);
+        return getDataFormDate(new PreddataRequest.HourRangeDto(startDateTime,endDateTime, stationName));
+    }
 
+    public List<PreddataResponse.ResponseDto> getDataFormDate(PreddataRequest.HourRangeDto request){
+        try{
+            return preddataRepository.
+                    findByStationNameAndMeasurementTimeBetweenOrderByMeasurementTimeAsc(
+                            request.stationName(),
+                            request.start(),
+                            request.end()
+                    ).parallelStream()
+                    .map(data -> PreddataResponse.ResponseDto.from(data))
+                    .collect(Collectors.toList());
+        }catch(Exception e){
+            log.warn("datas가져오는 실패함");
+        }
+        return null;
+    }
 }
