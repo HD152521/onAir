@@ -9,5 +9,6 @@ import java.util.Optional;
 
 public interface ObservatoryRepository extends JpaRepository<Observatory,Long> {
     Optional<Observatory> findObservatoryByStationName(String stationName);
+    List<Observatory> findByStationNameIn(List<String> stationNames);
 }
 

@@ -48,7 +48,7 @@ public class ObservatoryDataService {
 
     private static final int BATCH_SIZE = 100;
     @PersistenceContext
-    private final EntityManager em;
+    private EntityManager em;
 
 
     private final List<String> failedList = new ArrayList<>();
@@ -113,40 +113,168 @@ public class ObservatoryDataService {
         return allObservatoryData;
     }
 
+    @Transactional
     public List<ObservatoryData> saveTodayData(){
         List<ObservatoryData> result = new ArrayList<>();
 
         // 1. 모든 관측소를 스트림으로 순회
-        observatoryService.getAllObservatory().stream()
-                // 2. 각 관측소별 API 호출 → 데이터 리스트 스트림으로 변환
-                .flatMap(obs -> {
-                    try {
-                        return getObjectDatasFromAirkorea(new ObservatoryDataRequest.nationDto(obs.getStationName()))
-                                .stream();
-                    } catch (Exception ex) {
-                        log.warn("[{}] 관측소 데이터 조회 실패: {}", obs.getStationName(), ex.getMessage());
-                        return Stream.empty();
-                    }
-                })
-                // 3. 유효성 검사 통과한 데이터만
-                .filter(data -> {
-                    try {
-                        checkBeforeSave(data);
-                        return true;
-                    } catch (Exception ex) {
-                        log.warn("검증 실패 [{}]: {}", data.getStationName(), ex.getMessage());
-                        return false;
-                    }
-                })
-                // 4. 배치 저장
-                .forEachOrdered(data -> {
-                    result.add(data);
-                    em.persist(data);  // 영속화
-                    if (result.size() % BATCH_SIZE == 0) {
-                        em.flush();
-                        em.clear();  // 1차 캐시 비우기
-                    }
-                });
+        try {
+//            observatoryService.getRandomObservatory().stream()
+            observatoryService.getAllObservatory().stream()
+                    // 2. 각 관측소별 API 호출 → 데이터 리스트 스트림으로 변환
+                    .flatMap(obs -> {
+                        try {
+                            return getObjectDatasFromAirkorea(new ObservatoryDataRequest.nationDto(obs.getStationName()))
+                                    .stream();
+                        } catch (Exception ex) {
+                            log.warn("[{}] 관측소 데이터 조회 실패: {}", obs.getStationName(), ex.getMessage());
+                            return Stream.empty();
+                        }
+                    })
+                    // 3. 유효성 검사 통과한 데이터만
+                    .filter(data -> {
+                        try {
+                            checkAlreadySave(data);
+                            log.info("{} 관측소 성공", data.getStationName());
+                            return true;
+                        } catch (Exception ex) {
+                            log.warn("검증 실패 [{}]: {}", data.getStationName(), ex.getMessage());
+                            return false;
+                        }
+                    })
+                    // 4. 배치 저장
+                    .forEachOrdered(data -> {
+                        try {
+                            log.info("{} 관측소 데이터 배치까지 가져옴",data.getStationName());
+                            result.add(data);
+                            em.persist(data);  // 영속화
+                            if (result.size() % BATCH_SIZE == 0) {
+                                em.flush();
+                                em.clear();  // 1차 캐시 비우기
+                            }
+                        }catch (Exception e){
+                            log.error("[{}] 저장 실패: {}", data.getStationName(), e.getMessage(), e);
+                        }
+                    });
+        }catch (Exception e){
+            log.warn("하루치 데이터 저장하는데 오류가 발생함");
+        }
+
+        log.info("save종료");
+
+        // 남은 건들 flush
+        em.flush();
+        em.clear();
+
+        return result;
+    }
+
+    @Transactional
+    public List<ObservatoryData> saveLastData(){
+        List<ObservatoryData> result = new ArrayList<>();
+        // 1. 모든 관측소를 스트림으로 순회
+        try {
+//            observatoryService.getRandomObservatory().stream()
+            observatoryService.getAllObservatory().stream()
+                    // 2. 각 관측소별 API 호출 → 데이터 리스트 스트림으로 변환
+                    .flatMap(obs -> {
+                        try {
+                            return getObjectDatasFromAirkorea(new ObservatoryDataRequest.nationDto(obs.getStationName()))
+                                    .stream()
+                                    .limit(1);
+                        } catch (Exception ex) {
+                            log.warn("[{}] 관측소 데이터 조회 실패: {}", obs.getStationName(), ex.getMessage());
+                            failedList.add(obs.getStationName());
+                            return Stream.empty();
+                        }
+                    })
+                    // 3. 유효성 검사 통과한 데이터만
+                    .filter(data -> {
+                        try {
+                            checkBeforeSave(data);
+                            log.info("{} 관측소 성공", data.getStationName());
+                            return true;
+                        } catch (Exception ex) {
+                            log.warn("검증 실패 [{}]: {}", data.getStationName(), ex.getMessage());
+                            failedList.add(data.getStationName());
+                            return false;
+                        }
+                    })
+                    // 4. 배치 저장
+                    .forEachOrdered(data -> {
+                        try {
+                            log.info("{} 관측소 데이터 배치까지 가져옴",data.getStationName());
+                            result.add(data);
+                            em.persist(data);  // 영속화
+                            if (result.size() % BATCH_SIZE == 0) {
+                                em.flush();
+                                em.clear();  // 1차 캐시 비우기
+                            }
+                        }catch (Exception e){
+                            log.error("[{}] 저장 실패: {}", data.getStationName(), e.getMessage(), e);
+                            failedList.add(data.getStationName());
+                        }
+                    });
+        }catch (Exception e){
+            log.warn("하루치 데이터 저장하는데 오류가 발생함");
+        }
+
+        log.info("save종료");
+
+        // 남은 건들 flush
+        em.flush();
+        em.clear();
+
+        return result;
+    }
+
+    @Transactional
+    public List<ObservatoryData> savefailedData(List<String> failedList){
+        List<ObservatoryData> result = new ArrayList<>();
+        try {
+            observatoryService.stringListToObjects(failedList).stream()
+                    // 2. 각 관측소별 API 호출 → 데이터 리스트 스트림으로 변환
+                    .flatMap(obs -> {
+                        try {
+                            return getObjectDatasFromAirkorea(new ObservatoryDataRequest.nationDto(obs.getStationName()))
+                                    .stream()
+                                    .limit(1);
+                        } catch (Exception ex) {
+                            log.warn("[{}] 관측소 데이터 조회 실패: {}", obs.getStationName(), ex.getMessage());
+                            return Stream.empty();
+                        }
+                    })
+                    // 3. 유효성 검사 통과한 데이터만
+                    .filter(data -> {
+                        try {
+                            checkBeforeSave(data);
+                            log.info("{} 관측소 성공", data.getStationName());
+                            return true;
+                        } catch (Exception ex) {
+                            log.warn("검증 실패 [{}]: {}", data.getStationName(), ex.getMessage());
+                            return false;
+                        }
+                    })
+                    // 4. 배치 저장
+                    .forEachOrdered(data -> {
+                        try {
+                            log.info("{} 관측소 데이터 배치까지 가져옴",data.getStationName());
+                            result.add(data);
+                            em.persist(data);  // 영속화
+                            if (result.size() % BATCH_SIZE == 0) {
+                                em.flush();
+                                em.clear();  // 1차 캐시 비우기
+                            }
+                            failedList.remove(data.getStationName());
+                        }catch (Exception e){
+                            log.error("[{}] 저장 실패: {}", data.getStationName(), e.getMessage(), e);
+                        }
+                    });
+        }catch (Exception e){
+            log.warn("하루치 데이터 저장하는데 오류가 발생함");
+        }
+
+        log.info("save종료");
 
         // 남은 건들 flush
         em.flush();
@@ -196,51 +324,25 @@ public class ObservatoryDataService {
 //    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
     @Transactional
     public void updateObservatoryData(){
-//        int currentHour = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().getHour();
+
+        LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
         int currentHour = -10;
-        log.info("[Service] update서비스 들어옴 시간:{} 시간:{}",currentHour,lastHour);
-        List<ObservatoryData> saveList = new ArrayList<>();
-        if(currentHour != lastHour){
-            log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 시작");
+        log.info("[Service] update서비스 들어옴 시간:{} /  지난 마지막 업데이트 시간:{}",currentHour,lastHour);
+
+        if(now.getMinute()==10 || currentHour!=lastHour){
+            log.info("[Service] new updateObservatoryData 관측소 측정 데이터 새로 업데이트 시작");
 
             failedList.clear();
-            //Note 모든거 하나씩 가져오기
-//            List<ObservatoryData> todayLastObservatoryData = getLastObjectDatasFromAirkorea();
-            //note random값 10개
-            List<ObservatoryData> todayLastObservatoryData = getRandomObjectDatasFromAirkorea();
-
-            for(ObservatoryData observatoryData : todayLastObservatoryData){
-                try{
-                    checkBeforeSave(observatoryData);
-                    saveList.add(observatoryData);
-                }catch (Exception e){
-                    String stationName = observatoryData.getStationName();
-                    log.warn("[Service] {} 관측소 업데이트 실패 / msg:{}",stationName,e.getMessage());
-                    failedList.add(stationName);
-                }
-            }
-
-            try{
-                observatoryDataRepository.saveAll(saveList);
-            }catch (Exception e){
-                log.warn("{}",ErrorCode.OBSERVATORY_DATA_SAVE_ERROR);
-            }
+            saveLastData();
 
             lastHour=ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().getHour();
-            log.info("[Service] updateObservatoryData 관측소 측정 데이터 업데이트 완료!");
-            log.info("[Service] currentHour : {}, lastHour:{}",currentHour,lastHour);
+            log.info("[Service] {}시간 updateObservatoryData 관측소 측정 데이터 업데이트 완료!",currentHour);
 
+            log.info("실패 관측소 모음 : {}",failedList);
         }else{
-            log.info("시간 달라서 실패한것만 확인함");
-            LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
             if(failedList.isEmpty()) return;
-            for(String station: failedList){
-                ObservatoryData data = getLastObjectDataFromAirkorea(station);
-                if(data.getDataTime().getHour() == now.getHour()){
-                    observatoryDataRepository.save(data);
-                    failedList.remove(station);
-                }
-            }
+            savefailedData(failedList);
+            log.info("아직 실패인 관측소 모음 : {}",failedList);
         }
     }
 
@@ -425,6 +527,7 @@ public class ObservatoryDataService {
             observatoryService.checkObservatory(observatoryData);
         }catch (Exception e){
             log.warn(e.getMessage());
+            throw e;
         }
     }
 
@@ -466,13 +569,13 @@ public class ObservatoryDataService {
         log.info("데이터가 이미 있는지 확인");
         String station = observatoryData.getStationName();
         ObservatoryData lastObservatoryData = observatoryDataRepository.findTopByStationNameOrderByDataTimeDesc(station);
-        if(lastObservatoryData == null) return;
+        if(lastObservatoryData == null) throw  new BaseException(ErrorCode.DATA_NOT_FOUND);
         if(observatoryData.getDataTime().equals(lastObservatoryData.getDataTime())) throw new BaseException(ErrorCode.AIRKOREA_API_ALREADY_UPDATE);
     }
 
     public void checkAirkoreaUpdate(ObservatoryData observatoryData){
-        log.info("에어코리아 데이터가 최신인지 확인 / 데이터 시간:{}",observatoryData.getDataTime().getHour());
         LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+        log.info("에어코리아 데이터가 최신인지 확인 / 데이터 시간:{} / 지금 시간:{}",observatoryData.getDataTime().getHour(),now.getHour());
         if(observatoryData.getDataTime().getHour() != now.getHour()) throw new BaseException(ErrorCode.AIRKOREA_API_UPDATE_ERROR);
     }
 

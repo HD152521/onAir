@@ -30,14 +30,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE observatory_data SET is_deleted = true, deleted_at = now() where id = ?")
 @SQLRestriction("is_deleted is FALSE")
+@Table(name = "observatory_data")
 @Getter
 @Setter
 @AllArgsConstructor
 @Builder
-// JSON에 없는 필드는 무시
-@JsonIgnoreProperties(ignoreUnknown = true)
-// 이 클래스의 인스턴스를 만들 때 ObservatoryDataBuilder를 쓰도록 지시
-@JsonDeserialize(builder = ObservatoryData.ObservatoryDataBuilder.class)
+@JsonIgnoreProperties(ignoreUnknown = true) // JSON에 없는 필드는 무시
+@JsonDeserialize(builder = ObservatoryData.ObservatoryDataBuilder.class) // 이 클래스의 인스턴스를 만들 때 ObservatoryDataBuilder를 쓰도록 지시
 public class ObservatoryData extends BaseEntity {
 
     private static final Logger log = LoggerFactory.getLogger(ObservatoryData.class);
