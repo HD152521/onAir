@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                                 .requestMatchers(HttpMethod.OPTIONS,"/**/*").permitAll() //preflight요청 허용함.
                                 .requestMatchers(CorsUtils::isPreFlightRequest).permitAll() //preflight요청 허용함.
-                                .requestMatchers("/member/**", "/home/**","/observatory/get/loc","/observatory/airkorea/**",
+                                .requestMatchers("/member/**", "/home/**","/observatory/get/**","/observatory/airkorea/**",
                                         "/observatory/data/**").permitAll()
                                 .requestMatchers("/test","/test/*","/health").permitAll()  //health체크용
                                 .requestMatchers( "/v3/api-docs",
@@ -52,7 +52,7 @@ public class SecurityConfig {
                                         "/swagger-resources/**",
                                         "/api-test"
                                         ,"/api-test").permitAll()
-                        .requestMatchers("/file/readData","/pred/get","/compWeather/get").permitAll()
+                        .requestMatchers("/file/readData","/pred/**","/compWeather/get").permitAll()
                         //fixme 임시용임 밑에는
 //                        .requestMatchers("/compWeather/**","/file/**","/member/**",
 //                                "/observatory/**","/pred/**").permitAll()

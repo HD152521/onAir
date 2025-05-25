@@ -53,7 +53,7 @@ public class AuthenticationTokenFilter extends OncePerRequestFilter {
                 "/observatory/data",
                 "/compWeather/get",
                 "/file/readData",
-                "/pred/get",
+                "/pred",
                 "/member",
                 "/swagger",
                 "/test",
