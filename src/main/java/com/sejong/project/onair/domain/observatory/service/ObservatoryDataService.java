@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -300,6 +301,7 @@ public class ObservatoryDataService {
 
 //    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
     @Transactional
+    @CacheEvict(value = "observatoryDataList", allEntries = true, beforeInvocation = true)
     public void updateObservatoryData(){
 
         LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
@@ -370,7 +372,6 @@ public class ObservatoryDataService {
     @Cacheable(value = "observatoryDataList", unless = "#result == null")
     public List<ObservatoryDataResponse.FlagFilterDto> getNowDataAllFromDB(){
         log.info("now 데이터 가져오기 시작...");
-        List<Observatory> observatories = observatoryService.getAllObservatory();
         LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().withMinute(0).withSecond(0).withNano(0);
         LocalDateTime oneHourLater = now.plusHours(1);
         log.info("시작시간:{} 끝 시간{}",now,oneHourLater);

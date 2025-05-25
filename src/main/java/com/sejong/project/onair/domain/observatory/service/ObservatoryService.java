@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -81,6 +82,7 @@ public class ObservatoryService {
     }
 
 
+    @Scheduled(cron = "0 0 3 1 * ?")
     @CacheEvict(value = "observatoryList", allEntries = true, beforeInvocation = true)
     //todo 매월 업데이트하기
     public ObservatoryResponse.UpdateDto updateObservatoryFromAirkorea() {
