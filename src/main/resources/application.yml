@@ -1,8 +1,8 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://mysql:3307/onAir?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
-#    url: jdbc:mysql://localhost:3306/onAir?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
+#    url: jdbc:mysql://mysql:3307/onAir?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/onAir?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&createDatabaseIfNotExist=true
     username: onAir
     password: onAir123!@#
 
@@ -38,7 +38,7 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: http://localhost:5173/loadingAuth
+            redirect-uri: https://onair-lime.vercel.app/loadingAuth
   servlet:
     multipart:
       max-file-size: 20MB

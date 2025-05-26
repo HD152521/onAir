@@ -1,5 +1,6 @@
 package com.sejong.project.onair.domain.observatory.controller;
 
+import com.sejong.project.onair.domain.member.dto.MemberDetails;
 import com.sejong.project.onair.domain.observatory.dto.ObservatoryDataRequest;
 import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryDataService;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -71,10 +73,11 @@ public class ObservatoryDataController {
     @PostMapping("/data/dummy")
     public BaseResponse<?> saveDummyData(
             @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDateTime,
+            @DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss") LocalDateTime startDateTime,
             @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDateTime
-    ){
+            @DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss") LocalDateTime endDateTime,
+            @AuthenticationPrincipal MemberDetails memberDetails
+            ){
         return BaseResponse.onSuccess(observatoryDataService.saveDummyData(startDateTime,endDateTime));
     }
 
