@@ -42,7 +42,7 @@ public class ObservatoryAirkoreaController {
     //그냥 에어코리아에서 하나씩 가져오는거
     public List<ObservatoryData> getLastDataFromAllObservatory(){
         log.info("[Controller] getAllofData...");
-        return observatoryDataService.getLastObjectDatasFromAirkorea();
+        return observatoryDataService.getLastObjectsFromAirKorea();
     }
 
     @GetMapping("/get/String")

@@ -63,8 +63,9 @@ public class ObservatoryService {
     public List<Observatory> getRandomObservatory(){
         List<Observatory> observatories = getAllObservatory();
         List<Observatory> response = new ArrayList<>();
+        Random random = new Random();
         for(int i=0;i<20;i++){
-            response.add(observatories.get(i*7));
+            response.add(observatories.get(random.nextInt(observatories.size())));
         }
         return response;
     }
