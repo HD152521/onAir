@@ -13,6 +13,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -50,7 +51,19 @@ public class OAuth2UserAuthCodeServiceImpl {
         log.info("구글로 post 보냄");
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(requestUrl, request, String.class);
+        ResponseEntity<String> response = null;
+        try {
+            log.info("구글 토큰 교환 요청 보내는 중...");
+            response = restTemplate.postForEntity(requestUrl, request, String.class);
+            log.info("구글 응답 받음 - 상태: {}, 본문: {}",
+                    response.getStatusCode(), response.getBody());
+        } catch (HttpClientErrorException he) {
+            log.error("구글 HTTP 에러 - 상태: {}, 본문: {}",
+                    he.getStatusCode(), he.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("구글 토큰 교환 중 예외 발생", e);
+        }
+
         log.info("구글에서 Response값 받음");
 
         log.info("{}",response.getStatusCode());
