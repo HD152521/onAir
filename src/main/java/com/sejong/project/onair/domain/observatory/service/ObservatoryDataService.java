@@ -59,7 +59,8 @@ public class ObservatoryDataService {
     private final Executor apiExecutor;
 
 
-    private final List<String> failedList = new CopyOnWriteArrayList<>();
+//    private final List<String> failedList = new CopyOnWriteArrayList<>();
+    private final Map<String,List<String>> failedList = new HashMap<>();
 //        private int lastHour = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().getHour();
     private int lastHour = -2;
 
@@ -328,20 +329,28 @@ public class ObservatoryDataService {
         return toSave;
     }
 
+    public void addFailed(ObservatoryData data){
+        if(failedList.keySet().contains(data.getSidoName())){
+            failedList.get(data.getSidoName()).add(data.getStationName());
+        }else{
+            failedList.put(data.getSidoName(),new ArrayList<>());
+            failedList.get(data.getSidoName()).add(data.getStationName());
+        }
+    }
 
     @Transactional
     @CacheEvict(value = "observatoryDataList", allEntries = true, beforeInvocation = true)
     public List<ObservatoryData> saveLastData() {
         List<ObservatoryData> result = Collections.synchronizedList(new ArrayList<>());
         try{
-            getObjectsAllDataFromAirKorea().parallelStream()
+            getObjectsAllDataFromAirKorea().stream()
                     .filter(data -> {
                                 try{
                                     checkBeforeSave(data);
                                     return true;
                                 }catch (Exception e){
                                     log.warn("검증 실패 [{}]: {}", data.getStationName(), e.getMessage());
-                                    failedList.add(data.getStationName());
+                                    addFailed(data);
                                     return false;
                                 }
                     })
@@ -355,7 +364,7 @@ public class ObservatoryDataService {
                                 em.clear();  // 1차 캐시 비우기
                             }
                         }catch (Exception e){
-                            failedList.remove(data.getStationName());
+                            addFailed(data);
                             log.error("[{}] 저장 실패: {}", data.getStationName(), e.getMessage(), e);
                         }
                     });
@@ -447,7 +456,7 @@ public class ObservatoryDataService {
             log.info("실패 관측소 모음 : {}",failedList);
         }else{
             if(failedList.isEmpty()) return;
-            savefailedData(failedList);
+//            savefailedData(failedList);
             log.info("아직 실패인 관측소 모음 : {}",failedList);
         }
     }
