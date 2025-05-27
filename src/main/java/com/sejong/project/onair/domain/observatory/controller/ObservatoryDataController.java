@@ -81,4 +81,8 @@ public class ObservatoryDataController {
         return BaseResponse.onSuccess(observatoryDataService.saveDummyData(startDateTime,endDateTime));
     }
 
+    @GetMapping("/data/object/all")
+    public BaseResponse<?> getAllObjects(){
+        return BaseResponse.onSuccess(observatoryDataService.getObjectsAllDataFromAirKorea());
+    }
 }

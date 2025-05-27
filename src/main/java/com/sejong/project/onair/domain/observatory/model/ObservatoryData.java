@@ -112,8 +112,9 @@ public class ObservatoryData extends BaseEntity {
     /** 오존 농도 (ppm) */
     private Double o3Value;
 
-    @JsonProperty(value = "stationName", access = JsonProperty.Access.READ_ONLY)
     private String stationName;
+
+    private String sidoName;
 
     //널값인지 확인하기 위해 추가
     @PostLoad
@@ -139,11 +140,6 @@ public class ObservatoryData extends BaseEntity {
     @JsonPOJOBuilder(withPrefix = "")
     public static class ObservatoryDataBuilder {
         // Lombok이 생성한 빌더 메서드들을 Jackson이 인식하게 해줍니다.
-    }
-
-    @JsonIgnore
-    public void setStationName(String stationName){
-        this.stationName = stationName;
     }
 
     @Override

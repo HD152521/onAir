@@ -4,8 +4,10 @@ import com.sejong.project.onair.domain.observatory.dto.ObservatoryDataRequest;
 import com.sejong.project.onair.domain.observatory.dto.ObservatoryResponse;
 import com.sejong.project.onair.domain.observatory.model.Observatory;
 import com.sejong.project.onair.domain.observatory.model.ObservatoryData;
+import com.sejong.project.onair.domain.observatory.service.AirKoreaApiService;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryDataService;
 import com.sejong.project.onair.domain.observatory.service.ObservatoryService;
+import com.sejong.project.onair.global.exception.BaseResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,6 +26,7 @@ public class ObservatoryAirkoreaController {
     private static final Logger log = LoggerFactory.getLogger(ObservatoryAirkoreaController.class);
     private final ObservatoryService observatoryService;
     private final ObservatoryDataService observatoryDataService;
+    private final AirKoreaApiService airKoreaApiService;
 
     //Note AirKoreaAPI임
     @GetMapping("/getData/String")
@@ -67,5 +70,10 @@ public class ObservatoryAirkoreaController {
     public List<ObservatoryData> saveTodayDate(){
         log.info("[Contorller] save today airkorea data");
         return observatoryDataService.saveTodayData();
+    }
+
+    @GetMapping("/getData/String/all")
+    public String getAllData(){
+        return airKoreaApiService.getData();
     }
 }
