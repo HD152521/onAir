@@ -50,7 +50,6 @@ public class PreddataService {
         }
         return datas;
     }
-
     public List<PreddataResponse.ResponseDto> getAllPreddataResponse(){
         List<Preddata> datas = getAllPreddata();
         List<PreddataResponse.ResponseDto> response = new ArrayList<>();
@@ -100,6 +99,7 @@ public class PreddataService {
         }
     }
 
+    @Cacheable(value = "predDataList", unless = "#result == null")
     public List<PreddataResponse.ResponseDto> getDataFormDate(PreddataRequest.DayRangeDto request){
         String stationName = request.stationName();
         LocalDateTime startDateTime = request.start().atStartOfDay();
