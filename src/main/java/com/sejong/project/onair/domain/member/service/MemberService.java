@@ -21,4 +21,5 @@ public interface MemberService {
     Member getMember(MemberDetails memberDetails);
     Member getMember(String email);
     MemberResponse.MemberProfileDto getMemberProfile(MemberDetails memberDetails);
+    MemberResponse.LoginResponseDto logout(MemberDetails memberDetails,HttpServletResponse response);
 }
