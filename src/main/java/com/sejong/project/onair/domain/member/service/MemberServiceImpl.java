@@ -189,6 +189,7 @@ public class MemberServiceImpl implements MemberService{
         Member member = getMember(memberDetails);
         List<FileResponse.FileLogDto> logs = fileService.getUploadLog(member);
         MemberResponse.MemberProfileDto profile = MemberResponse.MemberProfileDto.from(member,logs);
+        log.info("member profile반환");
         return  profile;
     }
 
