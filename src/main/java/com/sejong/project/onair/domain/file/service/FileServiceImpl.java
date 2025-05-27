@@ -119,7 +119,11 @@ public class FileServiceImpl{
     @Cacheable(value = "uploadlog", unless = "#result == null")
     public List<FileResponse.FileLogDto> getUploadLog(Member member){
         List<UploadFile> uploadFiles = fileRepository.findUploadFilesByMember(member);
-        if(uploadFiles.isEmpty()) throw new BaseException(ErrorCode.FILELOG_NOT_FOUND);
+        if(uploadFiles.isEmpty()){
+//            throw new BaseException(ErrorCode.FILELOG_NOT_FOUND);
+            log.warn("파일 기록이 하나도 없음");
+            return null;
+        }
         List<FileResponse.FileLogDto> logDtos = new ArrayList<>();
 
         for(UploadFile file: uploadFiles) logDtos.add(FileResponse.FileLogDto.from(file));
