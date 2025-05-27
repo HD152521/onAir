@@ -436,6 +436,7 @@ public class ObservatoryDataService {
     }
 
 //    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 30 * * * *", zone = "Asia/Seoul")
     @Transactional
     @CacheEvict(value = "observatoryDataList", allEntries = true, beforeInvocation = true)
     public void updateObservatoryData(){
