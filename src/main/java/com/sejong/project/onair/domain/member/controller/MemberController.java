@@ -50,4 +50,9 @@ public class MemberController {
     public BaseResponse<?> getProfile(@AuthenticationPrincipal MemberDetails memberDetails){
         return  BaseResponse.onSuccess(memberService.getMemberProfile(memberDetails));
     }
+
+    @PostMapping("/logout")
+    public BaseResponse<?> userLogout(@AuthenticationPrincipal MemberDetails memberDetails,HttpServletResponse response){
+        return BaseResponse.onSuccess(memberService.logout(memberDetails,response));
+    }
 }

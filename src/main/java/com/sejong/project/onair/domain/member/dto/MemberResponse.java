@@ -11,13 +11,13 @@ public class MemberResponse {
     public record LoginResponseDto(
             String memberName,
             String email,
-            boolean isFirstLogin
+            String imgUrl
     ){
         public static LoginResponseDto from(Member member){
             return new LoginResponseDto(
                     member.getMemberName(),
                     member.getEmail(),
-                    member.isFirstLogin()
+                    member.getImgUrl()
             );
         }
     }

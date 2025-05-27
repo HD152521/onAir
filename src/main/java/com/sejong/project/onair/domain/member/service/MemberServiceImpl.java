@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -191,6 +192,39 @@ public class MemberServiceImpl implements MemberService{
         MemberResponse.MemberProfileDto profile = MemberResponse.MemberProfileDto.from(member,logs);
         log.info("member profile반환");
         return  profile;
+    }
+
+    public MemberResponse.LoginResponseDto logout(MemberDetails memberDetails,HttpServletResponse response){
+        log.info("{}",memberDetails.getUsername());
+        Member member = getMember(memberDetails);
+        MemberResponse.LoginResponseDto responseDto = MemberResponse.LoginResponseDto.from(member);
+
+        // 1) ACCESS_TOKEN 쿠키 삭제(값 비우고 maxAge=0)
+        ResponseCookie deleteAccess = ResponseCookie.from("ACCESS_TOKEN", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")                 // 로그인 시 지정한 path와 동일하게
+                .maxAge(0)                 // 즉시 만료
+                .sameSite("none")
+                .build();
+
+        // 2) REFRESH_TOKEN 쿠키 삭제
+        ResponseCookie deleteRefresh = ResponseCookie.from("REFRESH_TOKEN", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/auth/refresh")     // 로그인 시 지정한 path와 동일하게
+                .maxAge(0)
+                .sameSite("none")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteAccess.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteRefresh.toString());
+
+        // 3) (선택) 스프링 시큐리티 컨텍스트 클리어
+        SecurityContextHolder.clearContext();
+
+        log.info("logout완료");
+        return responseDto;
     }
 
 }

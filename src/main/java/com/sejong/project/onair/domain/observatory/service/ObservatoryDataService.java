@@ -61,7 +61,7 @@ public class ObservatoryDataService {
 
     private final List<String> failedList = new ArrayList<>();
 //        private int lastHour = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime().getHour();
-    private int lastHour = -1;
+    private int lastHour = -2;
 
     /*
        TODO 필요한 CONTROLLER
@@ -177,8 +177,8 @@ public class ObservatoryDataService {
 
     //note 모든 데이터 가져오는데 병렬처리 (하루치)
     public List<ObservatoryData> getAllObjectsFromAirKorea(){
-//        List<Observatory> observatories = observatoryService.getAllObservatory();
-        List<Observatory> observatories = observatoryService.getRandomObservatory();
+        List<Observatory> observatories = observatoryService.getAllObservatory();
+//        List<Observatory> observatories = observatoryService.getRandomObservatory();
         List<CompletableFuture<List<ObservatoryData>>> futures = observatories.stream()
                 .map(st ->
                         CompletableFuture.supplyAsync(
@@ -205,8 +205,8 @@ public class ObservatoryDataService {
                 .collect(Collectors.toList());
     }
     public List<ObservatoryData> getLastObjectsFromAirKorea(){
-//        List<Observatory> observatories = observatoryService.getAllObservatory();
-        List<Observatory> observatories = observatoryService.getRandomObservatory();
+        List<Observatory> observatories = observatoryService.getAllObservatory();
+//        List<Observatory> observatories = observatoryService.getRandomObservatory();
         List<CompletableFuture<ObservatoryData>> futures = observatories.stream()
                 .map(st ->
                         CompletableFuture.supplyAsync(
@@ -276,8 +276,8 @@ public class ObservatoryDataService {
         List<ObservatoryData> result = Collections.synchronizedList(new ArrayList<>());
         ExecutorService executor = Executors.newFixedThreadPool(20); // 병렬 스레드 제한
 
-//        List<CompletableFuture<Void>> futures = observatoryService.getAllObservatory().stream()
-        List<CompletableFuture<Void>> futures = observatoryService.getRandomObservatory().stream()
+        List<CompletableFuture<Void>> futures = observatoryService.getAllObservatory().stream()
+//        List<CompletableFuture<Void>> futures = observatoryService.getRandomObservatory().stream()
                 .map(obs -> CompletableFuture.runAsync(() -> {
                     try {
                         List<ObservatoryData> dataList = getLastObjectsFromAirKorea();
@@ -381,7 +381,7 @@ public class ObservatoryDataService {
     public void updateObservatoryData(){
 
         LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
-        int currentHour = -10;
+        int currentHour = now.getHour();
         log.info("[Service] update서비스 들어옴 시간:{} /  지난 마지막 업데이트 시간:{}",currentHour,lastHour);
 
         if(now.getMinute()==10 || currentHour!=lastHour){

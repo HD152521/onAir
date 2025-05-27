@@ -38,7 +38,10 @@ spring:
             scope:
               - emails
               - profile
-            redirect-uri: https://onair-lime.vercel.app/loadingAuth
+            redirect-uri :
+             - https://onair-lime.vercel.app/loadingAuth
+             - http://localhost:5173/loadingAuth
+
   servlet:
     multipart:
       max-file-size: 20MB
