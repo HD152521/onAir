@@ -84,7 +84,7 @@ public class MemberServiceImpl implements MemberService{
 
     private void addTokenCookies(HttpServletResponse response, TokenResponse tokenResponse) {
         // Access Token 쿠키
-        ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", tokenResponse.accessToken().token())
+        ResponseCookie accessCookie = ResponseCookie.from(JWT_ACCESS_TOKEN_COOKIE_NAME, tokenResponse.accessToken().token())
                 .httpOnly(true)            // JS 접근 차단
                 .secure(true)              // HTTPS 전용
                 .path("/")                 // 전체 경로에 대해 전송
@@ -92,10 +92,10 @@ public class MemberServiceImpl implements MemberService{
                 .sameSite("none")        // CSRF 방어
                 .build();
 
-        ResponseCookie refreshCookie = ResponseCookie.from("REFRESH_TOKEN", tokenResponse.accessToken().token())
+        ResponseCookie refreshCookie = ResponseCookie.from(JWT_REFRESH_TOKEN_COOKIE_NAME, tokenResponse.accessToken().token())
                 .httpOnly(true)
                 .secure(true)
-                .path("/auth/refresh")      // 리프레시 전용 엔드포인트에만 전송
+                .path("/member/refresh")      // 리프레시 전용 엔드포인트에만 전송
                 .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
                 .sameSite("none")
                 .build();
@@ -128,21 +128,22 @@ public class MemberServiceImpl implements MemberService{
         return tokenResponse;
     }
 
-    public ResponseEntity<BaseResponse<?>> updateRefreshToken(HttpServletRequest request, HttpServletResponse response){
+    public BaseResponse<?> updateRefreshToken(HttpServletRequest request, HttpServletResponse response){
         // 1) REFRESH_TOKEN 쿠키에서 값 꺼내기
         String refreshToken = jwtProvider.resolveRefreshToken(request, JWT_REFRESH_TOKEN_COOKIE_NAME);
+
         if (refreshToken == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(BaseResponse.onFailure("AUTH002", "리프레시 토큰이 없습니다", null));
+            return BaseResponse.onFailure(ErrorCode.EMPTY_TOKEN_PROVIDED,null);
         }
 
         // 2) 리프레시 토큰 유효성 검증
         if (!jwtProvider.validateRefreshToken(refreshToken)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(BaseResponse.onFailure("AUTH003", "리프레시 토큰이 유효하지 않습니다", null));
+            return BaseResponse.onFailure(ErrorCode.REFRESH_TOKEN_NOT_VALID,null);
         }
+
+        String name = jwtProvider.parseAudience(refreshToken);
+        Member member = getMember(name);
+        MemberResponse.LoginResponseDto responseDto = MemberResponse.LoginResponseDto.from(member);
 
         // 3) 토큰에서 Authentication 정보 추출
         Authentication authentication = jwtProvider.getAuthentication(refreshToken);
@@ -159,7 +160,7 @@ public class MemberServiceImpl implements MemberService{
                 .sameSite("none")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        return ResponseEntity.ok(BaseResponse.onSuccess("token 발급 완료"));
+        return BaseResponse.onSuccess(responseDto);
     }
 
     public Member getMember(MemberDetails memberDetails){
@@ -200,7 +201,7 @@ public class MemberServiceImpl implements MemberService{
         MemberResponse.LoginResponseDto responseDto = MemberResponse.LoginResponseDto.from(member);
 
         // 1) ACCESS_TOKEN 쿠키 삭제(값 비우고 maxAge=0)
-        ResponseCookie deleteAccess = ResponseCookie.from("ACCESS_TOKEN", "")
+        ResponseCookie deleteAccess = ResponseCookie.from(JWT_ACCESS_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
                 .secure(true)
                 .path("/")                 // 로그인 시 지정한 path와 동일하게
@@ -209,10 +210,10 @@ public class MemberServiceImpl implements MemberService{
                 .build();
 
         // 2) REFRESH_TOKEN 쿠키 삭제
-        ResponseCookie deleteRefresh = ResponseCookie.from("REFRESH_TOKEN", "")
+        ResponseCookie deleteRefresh = ResponseCookie.from(JWT_REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
                 .secure(true)
-                .path("/auth/refresh")     // 로그인 시 지정한 path와 동일하게
+                .path("/member/refresh")     // 로그인 시 지정한 path와 동일하게
                 .maxAge(0)
                 .sameSite("none")
                 .build();

@@ -109,6 +109,9 @@ public enum ErrorCode implements BaseCode {
     EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN-0000", "AccessToken 기간 만료됨"),
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "TOKEN-0001", "토큰이 올바르지 않습니다."),
     EMPTY_TOKEN_PROVIDED(HttpStatus.UNAUTHORIZED, "TOKEN-0002", "토큰 텅텅"),
+    REFRESH_TOKEN_NOT_VALID(HttpStatus.UNAUTHORIZED, "TOKEN-0003", "리프레시 토큰이 올바르지 않음"),
+
+
 
     INVALID_EMAIL_OR_PASSWORD(HttpStatus.NOT_FOUND, "MEMBER-0001", "유효하지 않는 이메일, 비번"),
     BAD_REQUEST_INGRANT(HttpStatus.BAD_REQUEST, "MEMBER-0002", "구글 권한이 제대로 넘어오지 않음."),
