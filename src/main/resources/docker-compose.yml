@@ -29,6 +29,7 @@ services:
       - db.env
     networks:
       - backend
+      -
 volumes:
   mysql-data:
 
