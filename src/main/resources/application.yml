@@ -33,14 +33,14 @@ spring:
       client:
         registration:
           google:
-            client-id: 929800744325-iaoqgqc2hui58anvsmkmjfurl6b6rmc1.apps.googleusercontent.com
-            client-secret: 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
+            client-id: 378618306834-bm81etunvujofnk4msnnsn2pn1380tef.apps.googleusercontent.com
+            client-secret: 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
             scope:
               - emails
               - profile
-            redirect-uri :
+            redirect-uri : http://localhost:5173/loadingAuth
 #             - https://onair-lime.vercel.app/loadingAuth
-             - http://localhost:5173/loadingAuth
+
 
   servlet:
     multipart:
