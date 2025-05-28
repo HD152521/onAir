@@ -38,7 +38,7 @@ public class MemberController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<BaseResponse<?>> refreshToken(
+    public BaseResponse<?> refreshToken(
             HttpServletRequest request,
             HttpServletResponse response
     ) throws IOException {

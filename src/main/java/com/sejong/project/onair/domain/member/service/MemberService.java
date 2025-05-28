@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface MemberService {
     MemberResponse.LoginResponseDto googleLoginByToken(MemberRequest.GoogleLoginDto googleLoginDto, HttpServletResponse response);
     MemberResponse.LoginResponseDto testLogin(HttpServletResponse response);
-    ResponseEntity<BaseResponse<?>> updateRefreshToken(HttpServletRequest request, HttpServletResponse response);
+    BaseResponse<?> updateRefreshToken(HttpServletRequest request, HttpServletResponse response);
     Member getMember(MemberDetails memberDetails);
     Member getMember(String email);
     MemberResponse.MemberProfileDto getMemberProfile(MemberDetails memberDetails);
