@@ -379,6 +379,7 @@ public class ObservatoryDataService {
         return result;
     }
 
+    //fixme 시도별 API받아와서 데이터 저장해야함.
     @Transactional
     @CacheEvict(value = "observatoryDataList", allEntries = true, beforeInvocation = true)
     public List<ObservatoryData> savefailedData(List<String> failedList){
@@ -434,6 +435,7 @@ public class ObservatoryDataService {
 
         return result;
     }
+
 
 //    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
     @Scheduled(cron = "0 30 * * * *", zone = "Asia/Seoul")
