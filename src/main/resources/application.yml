@@ -38,8 +38,8 @@ spring:
             scope:
               - emails
               - profile
-            redirect-uri : http://localhost:5173/loadingAuth
-#             - https://onair-lime.vercel.app/loadingAuth
+            redirect-uri : https://onair-lime.vercel.app/loadingAuth
+#             - http://localhost:5173/loadingAuth
 
 
   servlet:
