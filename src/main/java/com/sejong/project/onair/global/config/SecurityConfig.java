@@ -51,7 +51,8 @@ public class SecurityConfig {
                                         "/swagger-ui/**",
                                         "/swagger-resources/**",
                                         "/api-test"
-                                        ,"/api-test").permitAll()
+                                        ,"/api-test",
+                                        "/actuator/prometheus").permitAll()
                         .requestMatchers("/file/readData","/pred/**","/compWeather/get").permitAll()
                         //fixme 임시용임 밑에는
 //                        .requestMatchers("/compWeather/**","/file/**","/member/**",
