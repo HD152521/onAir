@@ -95,7 +95,7 @@ public class MemberServiceImpl implements MemberService{
         ResponseCookie refreshCookie = ResponseCookie.from(JWT_REFRESH_TOKEN_COOKIE_NAME, tokenResponse.accessToken().token())
                 .httpOnly(true)
                 .secure(true)
-                .path("/member/refresh")      // 리프레시 전용 엔드포인트에만 전송
+                .path("/api/v1/member/refresh")      // 리프레시 전용 엔드포인트에만 전송
                 .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
                 .sameSite("none")
                 .build();

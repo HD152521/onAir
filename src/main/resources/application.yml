@@ -38,8 +38,8 @@ spring:
             scope:
               - emails
               - profile
-            redirect-uri : http://localhost:5173/loadingAuth
-#             - https://onair-lime.vercel.app/loadingAuth
+            redirect-uri : https://onair-lime.vercel.app/loadingAuth
+#             - http://localhost:5173/loadingAuth
 
 
   servlet:
@@ -64,5 +64,19 @@ springdoc:
 jwt:
   secret: ZGZsbTJwM2ttZndlb2lmbjEzOTRnbnVxZWYxMjM1Zmdhc2RmZzQ0NHdkZjM0YXNkZjhhc2RmOTM0ZA==
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
 server:
   port: ${PORT:8080}
+
